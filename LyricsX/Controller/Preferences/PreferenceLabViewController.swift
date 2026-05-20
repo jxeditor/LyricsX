@@ -72,6 +72,7 @@ class PreferenceLabViewController: NSViewController {
         spotifyClientTokenView.string = defaults[.spotifyPrivateLyricsClientToken]
         defaults[.spotifyPrivateLyricsTokenSavedAt] = Date()
         defaults[.spotifyPrivateLyricsStatus] = defaults[.spotifyPrivateLyricsToken].isEmpty ? "Token 已清空" : "Token 已保存"
+        SpotifyPrivateTokenResolver.syncSharedStatus()
         refreshSpotifyPanel()
     }
 
@@ -79,6 +80,7 @@ class PreferenceLabViewController: NSViewController {
         let result = SpotifyPrivateTokenResolver.openAndInstallCapture()
         defaults[.spotifyPrivateLyricsAutoResult] = result.message
         defaults[.spotifyPrivateLyricsStatus] = result.message
+        SpotifyPrivateTokenResolver.syncSharedStatus()
         refreshSpotifyPanel()
     }
 
@@ -95,6 +97,7 @@ class PreferenceLabViewController: NSViewController {
             spotifyClientTokenView.string = clientToken
         }
         defaults[.spotifyPrivateLyricsStatus] = result.message
+        SpotifyPrivateTokenResolver.syncSharedStatus()
         refreshSpotifyPanel()
     }
 
@@ -316,7 +319,7 @@ class PreferenceLabViewController: NSViewController {
     }
 }
 
-private enum SpotifyPrivateTokenResolver {
+enum SpotifyPrivateTokenResolver {
     static func normalizedTokens(accessTokenText: String, clientTokenText: String) -> (accessToken: String, clientToken: String?) {
         let lines = accessTokenText
             .components(separatedBy: .newlines)
@@ -375,6 +378,32 @@ private enum SpotifyPrivateTokenResolver {
         return chromeResult.message.contains("JavaScript")
             ? (nil, nil, "Chrome JS 不可用，且缓存中未找到可用 token")
             : chromeResult
+    }
+
+    static func refreshSavedTokenIfPossible(reason: String) {
+        guard defaults[.spotifyPrivateLyricsEnabled] else {
+            syncSharedStatus()
+            return
+        }
+        let result = readCapturedToken()
+        defaults[.spotifyPrivateLyricsAutoResult] = result.message
+        if let token = result.token, !token.isEmpty {
+            defaults[.spotifyPrivateLyricsToken] = token
+            defaults[.spotifyPrivateLyricsTokenSavedAt] = Date()
+        }
+        if let clientToken = result.clientToken, !clientToken.isEmpty {
+            defaults[.spotifyPrivateLyricsClientToken] = clientToken
+        }
+        defaults[.spotifyPrivateLyricsStatus] = "\(reason)：\(result.message)"
+        syncSharedStatus()
+    }
+
+    static func syncSharedStatus() {
+        groupDefaults.set(defaults[.spotifyPrivateLyricsEnabled], forKey: UserDefaults.DefaultsKeys.spotifyPrivateLyricsEnabled.key)
+        groupDefaults.set(defaults[.spotifyPrivateLyricsStatus], forKey: UserDefaults.DefaultsKeys.spotifyPrivateLyricsStatus.key)
+        groupDefaults.set(defaults[.spotifyPrivateLyricsTokenSavedAt], forKey: UserDefaults.DefaultsKeys.spotifyPrivateLyricsTokenSavedAt.key)
+        groupDefaults.set(defaults[.spotifyPrivateLyricsToken].isEmpty == false, forKey: "SpotifyPrivateLyricsHasToken")
+        groupDefaults.set(defaults[.spotifyPrivateLyricsClientToken].isEmpty == false, forKey: "SpotifyPrivateLyricsHasClientToken")
     }
 
     private static func executeChromeCaptureScript() -> (token: String?, clientToken: String?, message: String) {

@@ -36,6 +36,7 @@ class AppController: NSObject {
     
     var searchRequest: LyricsSearchRequest?
     var searchCanceller: Cancellable?
+    private var pendingEmptyTrackGeneration = 0
     
     private var cancelBag = Set<AnyCancellable>()
     
@@ -131,12 +132,27 @@ class AppController: NSObject {
         if currentLyrics?.metadata.needsPersist == true {
             currentLyrics?.persist()
         }
+        guard let track = selectedPlayer.currentTrack else {
+            pendingEmptyTrackGeneration += 1
+            let generation = pendingEmptyTrackGeneration
+            DispatchQueue.lyricsDisplay.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+                guard generation == self?.pendingEmptyTrackGeneration else {
+                    return
+                }
+                guard selectedPlayer.currentTrack == nil else {
+                    self?.currentTrackChanged()
+                    return
+                }
+                self?.currentLyrics = nil
+                self?.currentLineIndex = nil
+                self?.searchCanceller?.cancel()
+            }
+            return
+        }
+        pendingEmptyTrackGeneration += 1
         currentLyrics = nil
         currentLineIndex = nil
         searchCanceller?.cancel()
-        guard let track = selectedPlayer.currentTrack else {
-            return
-        }
         // FIXME: deal with optional value
         let title = track.title ?? ""
         let artist = track.artist ?? ""

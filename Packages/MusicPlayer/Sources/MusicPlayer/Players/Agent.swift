@@ -50,13 +50,29 @@ extension MusicPlayers.Agent: MusicPlayerProtocol {
     }
     
     public var currentTrackWillChange: AnyPublisher<MusicTrack?, Never> {
-        return $designatedPlayer.map { $0?.currentTrackWillChange ?? Just(nil).eraseToAnyPublisher() }
+        return $designatedPlayer.map { player -> AnyPublisher<MusicTrack?, Never> in
+            guard let player = player else {
+                return Just(nil).eraseToAnyPublisher()
+            }
+            return Publishers.Merge(
+                Just(player.currentTrack),
+                player.currentTrackWillChange
+            ).eraseToAnyPublisher()
+        }
             .switchToLatest()
             .eraseToAnyPublisher()
     }
     
     public var playbackStateWillChange: AnyPublisher<PlaybackState, Never> {
-        return $designatedPlayer.map { $0?.playbackStateWillChange ?? Just(.stopped).eraseToAnyPublisher() }
+        return $designatedPlayer.map { player -> AnyPublisher<PlaybackState, Never> in
+            guard let player = player else {
+                return Just(.stopped).eraseToAnyPublisher()
+            }
+            return Publishers.Merge(
+                Just(player.playbackState),
+                player.playbackStateWillChange
+            ).eraseToAnyPublisher()
+        }
             .switchToLatest()
             .eraseToAnyPublisher()
     }

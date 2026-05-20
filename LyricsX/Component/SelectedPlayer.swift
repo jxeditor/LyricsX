@@ -50,12 +50,19 @@ extension MusicPlayers {
         private func selectPlayer() {
             let idx = defaults[.preferredPlayerIndex]
             if idx == -1 {
-                if defaults[.useSystemWideNowPlaying] {
-                    designatedPlayer = MusicPlayers.SystemMedia()
-                } else {
-                    let players = MusicPlayerName.scriptableCases.compactMap(MusicPlayers.Scriptable.init)
-                    designatedPlayer = MusicPlayers.NowPlaying(players: players)
+                var players: [MusicPlayerProtocol] = MusicPlayerName.scriptableCases
+                    .filter { $0 != .neteaseCloudMusic }
+                    .compactMap(MusicPlayers.Scriptable.init)
+                if let neteasePlayer = MusicPlayers.SystemMedia(name: .neteaseCloudMusic) {
+                    players.append(neteasePlayer)
                 }
+                if defaults[.useSystemWideNowPlaying],
+                   let systemPlayer = MusicPlayers.SystemMedia() {
+                    players.append(systemPlayer)
+                }
+                let nowPlaying = MusicPlayers.NowPlaying(players: players)
+                nowPlaying.preferredPlayerNameProvider = Self.currentSystemPlayingPlayerName
+                designatedPlayer = nowPlaying
             } else {
                 let name = MusicPlayerName(index: idx)
                 if name == .neteaseCloudMusic {
@@ -70,7 +77,7 @@ extension MusicPlayers {
 
         private var shouldKeepPollingNowPlaying: Bool {
             let idx = defaults[.preferredPlayerIndex]
-            return idx == 5 || (idx == -1 && defaults[.useSystemWideNowPlaying])
+            return idx == 5 || idx == -1
         }
         
         private var scheduleCanceller: Cancellable?
@@ -80,8 +87,85 @@ extension MusicPlayers {
             let q = DispatchQueue.global().cx
             let i: CXWrappers.DispatchQueue.SchedulerTimeType.Stride = .seconds(manualUpdateInterval)
             scheduleCanceller = q.schedule(after: q.now.advanced(by: i), interval: i, tolerance: i * 0.1, options: nil) { [unowned self] in
-                self.designatedPlayer?.updatePlayerState()
+                if let nowPlaying = self.designatedPlayer as? MusicPlayers.NowPlaying {
+                    nowPlaying.updateCandidatePlayerStates()
+                } else {
+                    self.designatedPlayer?.updatePlayerState()
+                }
+            }
+        }
+
+        private static func currentSystemPlayingPlayerName() -> MusicPlayerName? {
+            guard let snapshot = MediaControlAutoSnapshot.fetch(),
+                  snapshot.playing else {
+                return nil
+            }
+            switch snapshot.bundleIdentifier {
+            case "com.spotify.client":
+                return .spotify
+            case "com.netease.163music":
+                return .neteaseCloudMusic
+            case "com.apple.Music", "com.apple.iTunes":
+                return .appleMusic
+            default:
+                return nil
             }
         }
     }
 }
+
+private struct MediaControlAutoSnapshot: Decodable {
+    var playing: Bool
+    var bundleIdentifier: String?
+
+    static func fetch() -> MediaControlAutoSnapshot? {
+        let executablePaths = bundledExecutablePaths + [
+            "/opt/homebrew/bin/media-control",
+            "/usr/local/bin/media-control"
+        ]
+        guard let executablePath = executablePaths.first(where: { FileManager.default.isExecutableFile(atPath: $0) }) else {
+            return nil
+        }
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: executablePath)
+        process.arguments = ["get", "--now", "--no-artwork"]
+
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = Pipe()
+
+        do {
+            try process.run()
+        } catch {
+            return nil
+        }
+
+        let deadline = Date().addingTimeInterval(1.0)
+        while process.isRunning && Date() < deadline {
+            Thread.sleep(forTimeInterval: 0.02)
+        }
+        if process.isRunning {
+            process.terminate()
+            return nil
+        }
+        guard process.terminationStatus == 0 else {
+            return nil
+        }
+
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        return try? JSONDecoder().decode(MediaControlAutoSnapshot.self, from: data)
+    }
+
+    private static var bundledExecutablePaths: [String] {
+        let bundleCandidates = [
+            Bundle.main,
+            Bundle(for: BundleProbe.self)
+        ]
+        return bundleCandidates.compactMap {
+            $0.resourceURL?.appendingPathComponent("media-control/bin/media-control").path
+        }
+    }
+}
+
+private final class BundleProbe {}

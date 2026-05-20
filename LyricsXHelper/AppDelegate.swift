@@ -9,6 +9,8 @@ import Cocoa
 class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var statusItem: NSStatusItem!
+    private var spotifyTokenStatusItem: NSMenuItem?
+    private let groupDefaults = UserDefaults(suiteName: "3665V726AE.group.ddddxxx.LyricsX")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -38,6 +40,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func makeMenu() -> NSMenu {
         let menu = NSMenu(title: "LyricsX")
+        menu.delegate = self
+        let tokenItem = NSMenuItem(title: spotifyTokenStatusTitle(), action: nil, keyEquivalent: "")
+        tokenItem.isEnabled = false
+        spotifyTokenStatusItem = tokenItem
+        menu.addItem(tokenItem)
+        menu.addItem(NSMenuItem.separator())
         menu.addItem(item("显示歌词窗口", action: #selector(showLyricsWindow)))
         menu.addItem(item("搜索歌词...", action: #selector(searchLyrics)))
         menu.addItem(NSMenuItem.separator())
@@ -48,6 +56,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem.separator())
         menu.addItem(item("退出 LyricsX", action: #selector(quitLyricsX)))
         return menu
+    }
+
+    private func spotifyTokenStatusTitle() -> String {
+        guard let groupDefaults = groupDefaults,
+              groupDefaults.bool(forKey: "SpotifyPrivateLyricsEnabled") else {
+            return "Spotify Token：未启用"
+        }
+        guard groupDefaults.bool(forKey: "SpotifyPrivateLyricsHasToken") else {
+            return "Spotify Token：未保存"
+        }
+        guard let savedAt = groupDefaults.object(forKey: "SpotifyPrivateLyricsTokenSavedAt") as? Date else {
+            return "Spotify Token：状态未知"
+        }
+        let age = Date().timeIntervalSince(savedAt)
+        let minutes = max(0, Int(age / 60))
+        if age < 45 * 60 {
+            return "Spotify Token：有效（\(minutes) 分钟前刷新）"
+        }
+        return "Spotify Token：可能过期（\(minutes) 分钟前刷新）"
     }
 
     private func item(_ title: String, action: Selector) -> NSMenuItem {
@@ -110,5 +137,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         try? (lines.joined(separator: "\n") + "\n").write(to: URL(fileURLWithPath: "/tmp/lyricsx-helper-statusitem-check.log"),
                                                           atomically: true,
                                                           encoding: .utf8)
+    }
+}
+
+extension AppDelegate: NSMenuDelegate {
+    func menuWillOpen(_ menu: NSMenu) {
+        spotifyTokenStatusItem?.title = spotifyTokenStatusTitle()
     }
 }

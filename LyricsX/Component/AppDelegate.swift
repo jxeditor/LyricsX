@@ -34,6 +34,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSMenu
     @IBOutlet weak var statusBarMenu: NSMenu!
     
     var karaokeLyricsWC: KaraokeLyricsWindowController?
+    private var spotifyTokenRefreshTimer: Timer?
     
     lazy var searchLyricsWC: NSWindowController = {
         // swiftlint:disable:next force_cast
@@ -60,6 +61,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSMenu
         #endif
         
         let controller = AppController.shared
+        startSpotifyTokenRefreshTimer()
         
         karaokeLyricsWC = KaraokeLyricsWindowController()
         karaokeLyricsWC?.showWindow(nil)
@@ -112,17 +114,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSMenu
             return
         }
         let url = Bundle.main.bundleURL
-            .appendingPathComponent("Contents/Library/LoginItems/LyricsXHelper.app")
+            .appendingPathComponent("Contents/Library/LoginItems/Login Helper.app")
         try? NSWorkspace.shared.launchApplication(at: url, configuration: [:])
     }
     
     func applicationWillTerminate(_ aNotification: Notification) {
+        spotifyTokenRefreshTimer?.invalidate()
         if AppController.shared.currentLyrics?.metadata.needsPersist == true {
             AppController.shared.currentLyrics?.persist()
         }
         if defaults[.launchAndQuitWithPlayer] {
             let url = Bundle.main.bundleURL
-                .appendingPathComponent("Contents/Library/LoginItems/LyricsXHelper.app")
+                .appendingPathComponent("Contents/Library/LoginItems/Login Helper.app")
             groupDefaults[.launchHelperTime] = Date()
             do {
                 try NSWorkspace.shared.launchApplication(at: url, configuration: [:])
@@ -143,6 +146,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSMenu
         binder.bindShortcut(.shortcutWriteToiTunes, to: #selector(writeToiTunes))
         binder.bindShortcut(.shortcutWrongLyrics, to: #selector(wrongLyrics))
         binder.bindShortcut(.shortcutSearchLyrics, to: #selector(searchLyrics))
+    }
+
+    private func startSpotifyTokenRefreshTimer() {
+        SpotifyPrivateTokenResolver.syncSharedStatus()
+        spotifyTokenRefreshTimer?.invalidate()
+        spotifyTokenRefreshTimer = Timer.scheduledTimer(withTimeInterval: 600, repeats: true) { _ in
+            DispatchQueue.global(qos: .utility).async {
+                SpotifyPrivateTokenResolver.refreshSavedTokenIfPossible(reason: "定时刷新")
+            }
+        }
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 20) {
+            SpotifyPrivateTokenResolver.refreshSavedTokenIfPossible(reason: "启动刷新")
+        }
     }
     
     // MARK: - NSMenuDelegate

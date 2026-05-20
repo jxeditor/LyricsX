@@ -164,7 +164,19 @@ extension MusicPlayers.SystemMedia: MusicPlayerProtocol {
     }
     
     public var name: MusicPlayerName? {
-        return playerNameOverride
+        if let playerNameOverride = playerNameOverride {
+            return playerNameOverride
+        }
+        switch nowPlayingBundleIdentifier {
+        case "com.spotify.client":
+            return .spotify
+        case "com.netease.163music":
+            return .neteaseCloudMusic
+        case "com.apple.Music", "com.apple.iTunes":
+            return .appleMusic
+        default:
+            return nil
+        }
     }
     
     public var playbackTime: TimeInterval {

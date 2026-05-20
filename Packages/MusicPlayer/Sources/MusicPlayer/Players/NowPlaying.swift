@@ -24,6 +24,8 @@ extension MusicPlayers {
                 selectNewPlayer()
             }
         }
+
+        public var preferredPlayerNameProvider: (() -> MusicPlayerName?)?
         
         private var selectNewPlayerCanceller: AnyCancellable?
         
@@ -42,10 +44,24 @@ extension MusicPlayers {
                     self?.selectNewPlayer()
                 }
         }
+
+        public func updateCandidatePlayerStates() {
+            players.forEach { $0.updatePlayerState() }
+            selectNewPlayer()
+            DispatchQueue.playerUpdate.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                self?.selectNewPlayer()
+            }
+        }
         
         private func selectNewPlayer() {
             var newPlayer: MusicPlayerProtocol?
-            if designatedPlayer?.playbackState.isPlaying == true {
+            if let preferredName = preferredPlayerNameProvider?(),
+               let preferred = players.first(where: { $0.name == preferredName && $0.isSelectableForAuto }) {
+                newPlayer = preferred
+            } else if let spotify = players.first(where: { $0.playbackState.isPlaying && $0.hasSpotifyTrackID }),
+               designatedPlayer?.hasSpotifyTrackID != true {
+                newPlayer = spotify
+            } else if designatedPlayer?.playbackState.isPlaying == true {
                 newPlayer = designatedPlayer
             } else if let playing = players.first(where: { $0.playbackState.isPlaying }) {
                 newPlayer = playing
@@ -54,7 +70,19 @@ extension MusicPlayers {
             }
             if newPlayer !== designatedPlayer {
                 super.designatedPlayer = newPlayer
+            } else if newPlayer != nil {
+                objectWillChange.send()
             }
         }
+    }
+}
+
+private extension MusicPlayerProtocol {
+    var hasSpotifyTrackID: Bool {
+        name == .spotify && currentTrack?.id.hasPrefix("spotify:track:") == true
+    }
+
+    var isSelectableForAuto: Bool {
+        playbackState.isPlaying || playbackState != .stopped || currentTrack != nil
     }
 }

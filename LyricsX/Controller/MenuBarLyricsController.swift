@@ -57,19 +57,9 @@ class MenuBarLyricsController {
     }
 
     private func makeStatusItem() -> NSStatusItem {
-        Self.prepareStatusItemPreferences()
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        item.autosaveName = "LyricsX"
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         item.isVisible = true
         return item
-    }
-
-    private static func prepareStatusItemPreferences() {
-        let controlCenterDefaults = UserDefaults(suiteName: "com.apple.controlcenter")
-        controlCenterDefaults?.set(true, forKey: "NSStatusItem Visible LyricsX")
-        controlCenterDefaults?.set(false, forKey: "NSStatusItem VisibleCC LyricsX")
-        controlCenterDefaults?.set(120, forKey: "NSStatusItem Preferred Position LyricsX")
-        controlCenterDefaults?.synchronize()
     }
     
     private func handleLyricsDisplay(event: (lyrics: Lyrics?, index: Int?)) {
@@ -134,20 +124,21 @@ class MenuBarLyricsController {
         statusItem.button?.subviews.forEach { $0.removeFromSuperview() }
         statusItem.button?.title = string
         statusItem.button?.image = nil
+        statusItem.button?.imagePosition = .noImage
     }
     
     private func setImageStatusItem() {
-        statusItem.length = NSStatusItem.variableLength
+        statusItem.length = NSStatusItem.squareLength
         statusItem.isVisible = true
         guard let button = statusItem.button else {
             writeStatusItemDiagnostics(reason: "missing-button")
             return
         }
         button.subviews.forEach { $0.removeFromSuperview() }
-        button.title = "LyricsX"
-        button.image = nil
+        button.title = ""
+        button.image = buttonImage
         button.toolTip = "LyricsX"
-        button.imagePosition = .noImage
+        button.imagePosition = .imageOnly
         button.isEnabled = true
         button.isHidden = false
         button.alphaValue = 1

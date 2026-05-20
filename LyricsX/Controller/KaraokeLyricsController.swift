@@ -80,6 +80,7 @@ class KaraokeLyricsWindowController: NSWindowController {
         lyricsView.bind(\.drawFurigana, withDefaultName: .desktopLyricsEnableFurigana)
         
         let negateOption = [NSBindingOption.valueTransformerName: NSValueTransformerName.negateBooleanTransformerName]
+        window?.bind(.visible, withDefaultName: .desktopLyricsEnabled)
         window?.contentView?.bind(.hidden, withDefaultName: .desktopLyricsEnabled, options: negateOption)
         
         observeDefaults(key: .disableLyricsWhenSreenShot, options: [.new, .initial]) { [unowned self] _, change in
@@ -94,9 +95,12 @@ class KaraokeLyricsWindowController: NSWindowController {
         observeDefaults(keys: [
             .desktopLyricsFontName,
             .desktopLyricsFontSize,
-            .desktopLyricsFontNameFallback
+            .desktopLyricsFontNameFallback,
+            .desktopLyricsFixedWidthEnabled,
+            .desktopLyricsFixedWidth
         ], options: [.initial]) { [unowned self] in
             self.lyricsView.font = defaults.desktopLyricsFont
+            self.makeConstraints()
         }
         
         observeNotification(name: NSApplication.didChangeScreenParametersNotification, queue: .main) { [unowned self] _ in
@@ -180,6 +184,9 @@ class KaraokeLyricsWindowController: NSWindowController {
             make.trailing.lessThanOrEqualToSuperview().priority(.keepWindowSize)
             make.top.greaterThanOrEqualToSuperview().priority(.keepWindowSize)
             make.bottom.lessThanOrEqualToSuperview().priority(.keepWindowSize)
+            if defaults[.desktopLyricsFixedWidthEnabled] {
+                make.width.equalTo(defaults[.desktopLyricsFixedWidth]).priority(.required)
+            }
         }
     }
     

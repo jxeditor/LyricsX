@@ -85,6 +85,9 @@ class AppController: NSObject {
         if currentLineIndex != index {
             currentLineIndex = index
         }
+        guard playbackState.isPlaying else {
+            return
+        }
         if let next = next, playbackState.isPlaying {
             let dt = lyrics.lines[next].position - playbackTime - lyrics.adjustedTimeDelay
             let q = DispatchQueue.lyricsDisplay.cx
@@ -201,7 +204,11 @@ class AppController: NSObject {
         }
         
         let duration = track.duration ?? 0
-        let req = LyricsSearchRequest(searchTerm: .info(title: title, artist: artist), duration: duration, limit: 5)
+        var userInfo: [String: String] = ["trackID": track.id]
+        if selectedPlayer.name == .spotify || track.id.hasPrefix("spotify:track:") {
+            userInfo["spotifyTrackID"] = track.id.replacingOccurrences(of: "spotify:track:", with: "")
+        }
+        let req = LyricsSearchRequest(searchTerm: .info(title: title, artist: artist), duration: duration, limit: 5, userInfo: userInfo)
         searchRequest = req
         searchCanceller = lyricsManager.lyricsPublisher(request: req)
             .timeout(.seconds(10), scheduler: DispatchQueue.lyricsDisplay.cx)

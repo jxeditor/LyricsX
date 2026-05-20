@@ -36,10 +36,13 @@ extension MusicPlayers {
                 self?.selectPlayer()
             }
             manualUpdateObservation = playbackStateWillChange.sink { [weak self] state in
+                guard let self = self else { return }
                 if state.isPlaying {
-                    self?.scheduleManualUpdate()
+                    self.scheduleManualUpdate()
+                } else if self.shouldKeepPollingNowPlaying {
+                    self.scheduleManualUpdate()
                 } else {
-                    self?.scheduleCanceller?.cancel()
+                    self.scheduleCanceller?.cancel()
                 }
             }
         }
@@ -54,8 +57,20 @@ extension MusicPlayers {
                     designatedPlayer = MusicPlayers.NowPlaying(players: players)
                 }
             } else {
-                designatedPlayer = MusicPlayerName(index: idx).flatMap(MusicPlayers.Scriptable.init)
+                let name = MusicPlayerName(index: idx)
+                if name == .neteaseCloudMusic {
+                    designatedPlayer = MusicPlayers.SystemMedia(name: .neteaseCloudMusic)
+                } else {
+                    designatedPlayer = name.flatMap(MusicPlayers.Scriptable.init)
+                }
             }
+            designatedPlayer?.updatePlayerState()
+            scheduleManualUpdate()
+        }
+
+        private var shouldKeepPollingNowPlaying: Bool {
+            let idx = defaults[.preferredPlayerIndex]
+            return idx == 5 || (idx == -1 && defaults[.useSystemWideNowPlaying])
         }
         
         private var scheduleCanceller: Cancellable?

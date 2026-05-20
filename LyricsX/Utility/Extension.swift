@@ -21,6 +21,7 @@ extension MusicPlayerName {
         case 2: self = .vox
         case 3: self = .audirvana
         case 4: self = .swinsian
+        case 5: self = .neteaseCloudMusic
         default: return nil
         }
     }
@@ -29,6 +30,7 @@ extension MusicPlayerName {
         switch self {
         case .appleMusic:   return #imageLiteral(resourceName: "iTunes_icon")
         case .spotify:  return #imageLiteral(resourceName: "spotify_icon")
+        case .neteaseCloudMusic: return NSImage(named: "netease_icon") ?? NSImage(named: "NSApplicationIcon")!
         case .vox:      return #imageLiteral(resourceName: "vox_icon")
         case .audirvana: return #imageLiteral(resourceName: "audirvana_icon")
         case .swinsian: return #imageLiteral(resourceName: "swinsian_icon")

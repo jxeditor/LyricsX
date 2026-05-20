@@ -9,11 +9,14 @@
 
 import Cocoa
 import GenericID
+import LyricsService
 import MASShortcut
 import MusicPlayer
+#if ENABLE_APPCENTER && canImport(AppCenter) && canImport(AppCenterAnalytics) && canImport(AppCenterCrashes)
 import AppCenter
 import AppCenterAnalytics
 import AppCenterCrashes
+#endif
 
 #if !IS_FOR_MAS
 import Sparkle
@@ -40,9 +43,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSMenu
         return NSWindowController(window: window)
     }()
     
+    lazy var preferencesWC: NSWindowController = {
+        // swiftlint:disable:next force_cast
+        NSStoryboard(name: "Preferences", bundle: nil).instantiateInitialController() as! NSWindowController
+    }()
+    
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        NSApp.setActivationPolicy(.regular)
         registerUserDefaults()
-        #if RELEASE
+        configureLyricsProviders()
+        #if RELEASE && ENABLE_APPCENTER && canImport(AppCenter) && canImport(AppCenterAnalytics) && canImport(AppCenterCrashes)
         AppCenter.start(withAppSecret: "36777a05-06fd-422e-9375-a934b3c835a5", services:[
             Analytics.self,
             Crashes.self
@@ -54,8 +64,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSMenu
         karaokeLyricsWC = KaraokeLyricsWindowController()
         karaokeLyricsWC?.showWindow(nil)
         
-        MenuBarLyricsController.shared.statusItem.menu = statusBarMenu
         statusBarMenu.delegate = self
+        installMainMenuFallback()
+        NSAppleEventManager.shared().setEventHandler(self,
+                                                     andSelector: #selector(handleGetURLEvent(_:withReplyEvent:)),
+                                                     forEventClass: AEEventClass(kInternetEventClass),
+                                                     andEventID: AEEventID(kAEGetURL))
+        launchMenuBarHelper()
         
         lyricsOffsetStepper.bind(.value,
                                  to: controller,
@@ -68,8 +83,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSMenu
         
         setupShortcuts()
         
-        NSRunningApplication.runningApplications(withBundleIdentifier: lyricsXHelperIdentifier).forEach { $0.terminate() }
-        
         let sharedKeys: [UserDefaults.DefaultsKeys] = [
             .launchAndQuitWithPlayer,
             .preferredPlayerIndex,
@@ -81,7 +94,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSMenu
         #if IS_FOR_MAS
         checkForMASReview(force: true)
         #else
-        SUUpdater.shared()?.checkForUpdatesInBackground()
+        SUUpdater.shared()?.automaticallyChecksForUpdates = false
         if #available(OSX 10.12.2, *) {
             observeDefaults(key: .touchBarLyricsEnabled, options: [.new, .initial]) { _, change in
                 if change.newValue, TouchBarLyricsController.shared == nil {
@@ -92,6 +105,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSMenu
             }
         }
         #endif
+    }
+
+    private func launchMenuBarHelper() {
+        guard NSRunningApplication.runningApplications(withBundleIdentifier: lyricsXHelperIdentifier).isEmpty else {
+            return
+        }
+        let url = Bundle.main.bundleURL
+            .appendingPathComponent("Contents/Library/LoginItems/LyricsXHelper.app")
+        try? NSWorkspace.shared.launchApplication(at: url, configuration: [:])
     }
     
     func applicationWillTerminate(_ aNotification: Notification) {
@@ -140,6 +162,57 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSMenu
         menu.item(withTag: 202)?.isEnabled = AppController.shared.currentLyrics != nil
     }
     
+    private func installMainMenuFallback() {
+        guard let mainMenu = NSApp.mainMenu else {
+            return
+        }
+        
+        let menuItem = NSMenuItem(title: "LyricsX", action: nil, keyEquivalent: "")
+        let menu = NSMenu(title: "LyricsX")
+        menu.delegate = self
+        menuItem.submenu = menu
+        
+        menu.addItem(makeToggleMenuItem(title: localizedMainMenuTitle("Enable Menu Bar Lyrics"), key: .menuBarLyricsEnabled))
+        menu.addItem(makeToggleMenuItem(title: localizedMainMenuTitle("Enable Karaoke Lyrics"), key: .desktopLyricsEnabled))
+        menu.addItem(NSMenuItem(title: localizedMainMenuTitle("Show Lyrics Window"), action: #selector(showLyricsHUD(_:)), keyEquivalent: "l"))
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: localizedMainMenuTitle("Search Lyrics..."), action: #selector(searchLyrics(_:)), keyEquivalent: "f"))
+        menu.addItem(NSMenuItem(title: localizedMainMenuTitle("Wrong Lyrics"), action: #selector(wrongLyrics(_:)), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: localizedMainMenuTitle("Write to iTunes"), action: #selector(writeToiTunes(_:)), keyEquivalent: ""))
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: localizedMainMenuTitle("Preferences..."), action: #selector(showPreferences(_:)), keyEquivalent: ","))
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: localizedMainMenuTitle("About LyricsX"), action: #selector(aboutLyricsXAction(_:)), keyEquivalent: ""))
+        #if !IS_FOR_MAS
+        menu.addItem(NSMenuItem(title: localizedMainMenuTitle("Check For Update..."), action: #selector(checkUpdateAction(_:)), keyEquivalent: ""))
+        #endif
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: localizedMainMenuTitle("Quit LyricsX"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        
+        let insertIndex = min(1, mainMenu.items.count)
+        mainMenu.insertItem(menuItem, at: insertIndex)
+    }
+    
+    private func makeToggleMenuItem(title: String, key: UserDefaults.DefaultsKey<Bool>) -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: #selector(toggleDefaultMenuItem(_:)), keyEquivalent: "")
+        item.representedObject = key.key
+        item.state = defaults[key] ? .on : .off
+        return item
+    }
+    
+    private func localizedMainMenuTitle(_ title: String) -> String {
+        return Bundle.main.localizedString(forKey: title, value: title, table: "Main")
+    }
+    
+    @objc private func toggleDefaultMenuItem(_ sender: NSMenuItem) {
+        guard let key = sender.representedObject as? String else {
+            return
+        }
+        let defaultsKey = UserDefaults.DefaultsKey<Bool>(key)
+        defaults[defaultsKey] = !defaults[defaultsKey]
+        sender.state = defaults[defaultsKey] ? .on : .off
+    }
+    
     // MARK: - Menubar Action
     
     var lyricsHUD: NSWindowController?
@@ -151,6 +224,35 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSMenu
         NSApp.activate(ignoringOtherApps: true)
         lyricsHUD = controller
     }
+
+    @objc private func handleGetURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent replyEvent: NSAppleEventDescriptor) {
+        guard let urlString = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue,
+              let url = URL(string: urlString),
+              url.scheme == "lyricsx" else {
+            return
+        }
+        switch url.host {
+        case "show-lyrics-window":
+            showLyricsHUD(nil)
+        case "preferences":
+            showPreferences(nil)
+        case "search":
+            searchLyrics(nil)
+        case "toggle-menu-bar-lyrics":
+            defaults[.menuBarLyricsEnabled] = !defaults[.menuBarLyricsEnabled]
+        case "toggle-desktop-lyrics":
+            defaults[.desktopLyricsEnabled] = !defaults[.desktopLyricsEnabled]
+        case "quit":
+            NSApp.terminate(nil)
+        default:
+            NSApp.activate(ignoringOtherApps: true)
+        }
+    }
+    
+    @IBAction func showPreferences(_ sender: Any?) {
+        preferencesWC.showWindow(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
     
     @IBAction func aboutLyricsXAction(_ sender: Any) {
         if #available(OSX 10.13, *) {
@@ -159,7 +261,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSMenu
             #else
                 let channel = "GitHub"
             #endif
-            let versionString = "\(channel) Version \(Bundle.main.semanticVersion!)"
+            let version = Bundle.main.semanticVersion.map(String.init) ?? (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
+            let versionString = "\(channel) Version \(version)"
             NSApp.orderFrontStandardAboutPanel(options: [.applicationVersion: versionString])
         } else {
             NSApp.orderFrontStandardAboutPanel(sender)
@@ -255,7 +358,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSMenu
             .chineseConversionIndex: isHant ? 2 : 0,
             .desktopLyricsXPositionFactor: 0.5,
             .desktopLyricsYPositionFactor: 0.9,
+            .desktopLyricsFixedWidthEnabled: false,
+            .desktopLyricsFixedWidth: 960,
+            .autoTimingLyricsEnabled: false,
+            .spotifyPrivateLyricsEnabled: false,
+            .spotifyPrivateLyricsToken: "",
+            .spotifyPrivateLyricsAutoResult: "",
+            .spotifyPrivateLyricsStatus: "",
         ])
+    }
+
+    private func configureLyricsProviders() {
+        LyricsProviders.SpotifyPrivate.accessTokenProvider = {
+            defaults[.spotifyPrivateLyricsEnabled] ? defaults[.spotifyPrivateLyricsToken] : nil
+        }
+        LyricsProviders.SpotifyPrivate.statusHandler = { status in
+            DispatchQueue.main.async {
+                defaults[.spotifyPrivateLyricsStatus] = status
+            }
+        }
     }
 }
 

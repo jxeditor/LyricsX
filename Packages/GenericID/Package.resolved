@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "CXShim",
+        "repositoryURL": "https://github.com/cx-org/CXShim",
+        "state": {
+          "branch": null,
+          "revision": "82fecc246c7ca9f0ac1656b8199b7956e64d68f3",
+          "version": "0.4.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}

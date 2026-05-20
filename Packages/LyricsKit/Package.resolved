@@ -1,0 +1,61 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "CXExtensions",
+        "repositoryURL": "https://github.com/cx-org/CXExtensions",
+        "state": {
+          "branch": null,
+          "revision": "4790ecd6a6c0e796d776a28a820b552f7e8f6abd",
+          "version": "0.4.0"
+        }
+      },
+      {
+        "package": "CXShim",
+        "repositoryURL": "https://github.com/cx-org/CXShim",
+        "state": {
+          "branch": null,
+          "revision": "82fecc246c7ca9f0ac1656b8199b7956e64d68f3",
+          "version": "0.4.0"
+        }
+      },
+      {
+        "package": "CXTest",
+        "repositoryURL": "https://github.com/cx-org/CXTest",
+        "state": {
+          "branch": null,
+          "revision": "929ce7cbd3005bc9356ae826bb65ee2611379b17",
+          "version": "0.4.0"
+        }
+      },
+      {
+        "package": "Gzip",
+        "repositoryURL": "https://github.com/1024jp/GzipSwift",
+        "state": {
+          "branch": null,
+          "revision": "ba0b6cb51cc6202f896e469b87d2889a46b10d1b",
+          "version": "5.1.1"
+        }
+      },
+      {
+        "package": "Regex",
+        "repositoryURL": "https://github.com/ddddxxx/Regex",
+        "state": {
+          "branch": null,
+          "revision": "c0ad0a7e9a48989d9688c2b524a1e69b6293b733",
+          "version": "1.0.1"
+        }
+      },
+      {
+        "package": "SwiftCF",
+        "repositoryURL": "https://github.com/ddddxxx/SwiftCF",
+        "state": {
+          "branch": null,
+          "revision": "8d0425466f0660826a26ad3d77df447ecf6950a3",
+          "version": "0.2.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}

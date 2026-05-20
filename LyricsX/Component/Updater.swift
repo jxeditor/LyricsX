@@ -39,7 +39,9 @@ var remoteVersion: Semver? {
             return
         }
         DispatchQueue.global().async {
-            let local = Bundle.main.semanticVersion!
+            guard let local = Bundle.main.semanticVersion else {
+                return
+            }
             guard let remote = remoteVersion else {
                 return
             }

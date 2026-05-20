@@ -1,0 +1,3 @@
+MACOSX_DEPLOYMENT_TARGET = 10.13
+GCC_TREAT_WARNINGS_AS_ERRORS = NO
+WARNING_CFLAGS = $(inherited) -Wno-deprecated-declarations

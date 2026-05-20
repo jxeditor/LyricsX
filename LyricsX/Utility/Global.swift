@@ -12,8 +12,8 @@ import CXShim
 import GenericID
 import MusicPlayer
 
-typealias ObservableObject = CombineX.ObservableObject
-typealias Published = CombineX.Published
+typealias ObservableObject = CXShim.ObservableObject
+typealias Published = CXShim.Published
 
 let fontNameFallbackCountMax = 1
 // 7 days. after this period of time since the app built, the app is not considered as "in review".
@@ -108,6 +108,8 @@ extension UserDefaults.DefaultsKeys {
     
     static let desktopLyricsXPositionFactor = Key<CGFloat>("DesktopLyricsXPositionFactor")
     static let desktopLyricsYPositionFactor = Key<CGFloat>("DesktopLyricsYPositionFactor")
+    static let desktopLyricsFixedWidthEnabled = Key<Bool>("DesktopLyricsFixedWidthEnabled")
+    static let desktopLyricsFixedWidth = Key<Int>("DesktopLyricsFixedWidth")
     
     static let desktopLyricsEnableFurigana = Key<Bool>("DesktopLyricsEnableFurigana")
     
@@ -144,6 +146,12 @@ extension UserDefaults.DefaultsKeys {
     
     // Lab
     static let useSystemWideNowPlaying = Key<Bool>("UseSystemWideNowPlaying")
+    static let autoTimingLyricsEnabled = Key<Bool>("AutoTimingLyricsEnabled")
+    static let spotifyPrivateLyricsEnabled = Key<Bool>("SpotifyPrivateLyricsEnabled")
+    static let spotifyPrivateLyricsToken = Key<String>("SpotifyPrivateLyricsToken")
+    static let spotifyPrivateLyricsTokenSavedAt = Key<Date?>("SpotifyPrivateLyricsTokenSavedAt")
+    static let spotifyPrivateLyricsAutoResult = Key<String>("SpotifyPrivateLyricsAutoResult")
+    static let spotifyPrivateLyricsStatus = Key<String>("SpotifyPrivateLyricsStatus")
     
     static let writeiTunesWithTranslation = Key<Bool>("WriteiTunesWithTranslation")
     static let writeToiTunesAutomatically = Key<Bool>("WriteToiTunesAutomatically")

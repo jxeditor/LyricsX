@@ -16,6 +16,7 @@ class PreferenceGeneralViewController: NSViewController {
     @IBOutlet weak var preferAuto: NSButton!
     @IBOutlet weak var preferiTunes: NSButton!
     @IBOutlet weak var preferSpotify: NSButton!
+    @IBOutlet weak var preferNetEase: NSButton?
     @IBOutlet weak var preferVox: NSButton!
     @IBOutlet weak var preferAudirvana: NSButton!
     @IBOutlet weak var preferSwinsian: NSButton!
@@ -28,9 +29,12 @@ class PreferenceGeneralViewController: NSViewController {
     @IBOutlet weak var loadHomonymLrcButton: NSButton!
     
     @IBOutlet weak var languagePopUp: NSPopUpButton!
+
+    private var preferredPlayerButtons: [NSButton] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        installPreferredPlayerControls()
         
         switch defaults[.preferredPlayerIndex] {
         case 0:
@@ -71,6 +75,7 @@ class PreferenceGeneralViewController: NSViewController {
             let idx = localizations.firstIndex(of: lan) {
             languagePopUp.selectItem(at: idx + 2)
         }
+        syncPreferredPlayerButtons()
     }
     
     @IBAction func toggleAutoLaunchAction(_ sender: NSButton) {
@@ -120,6 +125,7 @@ class PreferenceGeneralViewController: NSViewController {
     
     @IBAction func preferredPlayerAction(_ sender: NSButton) {
         defaults[.preferredPlayerIndex] = sender.tag
+        syncPreferredPlayerButtons()
         
         if sender.tag < 0 {
             autoLaunchButton.isEnabled = false
@@ -135,6 +141,81 @@ class PreferenceGeneralViewController: NSViewController {
             defaults[.loadLyricsBesideTrack] = false
         } else {
             loadHomonymLrcButton.isEnabled = true
+        }
+    }
+
+    private func installPreferredPlayerControls() {
+        guard let container = preferAuto.superview else {
+            return
+        }
+        container.subviews.forEach { $0.isHidden = true }
+
+        let stack = NSStackView()
+        stack.orientation = .horizontal
+        stack.alignment = .top
+        stack.distribution = .equalSpacing
+        stack.spacing = 6
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(stack)
+
+        let items: [(tag: Int, title: String, image: NSImage)] = [
+            (-1, NSLocalizedString("Auto", comment: ""), NSImage(named: "now_playing_icon") ?? NSImage()),
+            (0, NSLocalizedString("iTunes", comment: ""), MusicPlayerName.appleMusic.icon),
+            (1, "Spotify", MusicPlayerName.spotify.icon),
+            (5, NSLocalizedString("NetEase", comment: ""), MusicPlayerName.neteaseCloudMusic.icon),
+            (2, "Vox", MusicPlayerName.vox.icon),
+            (3, "Audirvana", MusicPlayerName.audirvana.icon),
+            (4, "Swinsian", MusicPlayerName.swinsian.icon)
+        ]
+
+        preferredPlayerButtons = items.map { item in
+            let column = NSStackView()
+            column.orientation = .vertical
+            column.alignment = .centerX
+            column.spacing = 6
+            column.translatesAutoresizingMaskIntoConstraints = false
+
+            let icon = NSButton()
+            icon.image = item.image
+            icon.imagePosition = .imageOnly
+            icon.imageScaling = .scaleProportionallyUpOrDown
+            icon.bezelStyle = .shadowlessSquare
+            icon.isBordered = false
+            icon.target = self
+            icon.action = #selector(preferredPlayerIconAction(_:))
+            icon.tag = item.tag
+            icon.widthAnchor.constraint(equalToConstant: 40).isActive = true
+            icon.heightAnchor.constraint(equalToConstant: 40).isActive = true
+
+            let radio = NSButton(radioButtonWithTitle: item.title, target: self, action: #selector(preferredPlayerAction(_:)))
+            radio.tag = item.tag
+            radio.font = NSFont.systemFont(ofSize: 11)
+            radio.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+            column.addArrangedSubview(icon)
+            column.addArrangedSubview(radio)
+            stack.addArrangedSubview(column)
+            return radio
+        }
+
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 4),
+            stack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -4),
+            stack.topAnchor.constraint(equalTo: container.topAnchor, constant: 8),
+            stack.bottomAnchor.constraint(lessThanOrEqualTo: container.bottomAnchor, constant: -4)
+        ])
+    }
+
+    @objc private func preferredPlayerIconAction(_ sender: NSButton) {
+        defaults[.preferredPlayerIndex] = sender.tag
+        syncPreferredPlayerButtons()
+        preferredPlayerAction(sender)
+    }
+
+    private func syncPreferredPlayerButtons() {
+        let selectedTag = defaults[.preferredPlayerIndex]
+        preferredPlayerButtons.forEach { button in
+            button.state = button.tag == selectedTag ? .on : .off
         }
     }
 }

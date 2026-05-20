@@ -21,10 +21,9 @@ class MenuBarLyricsController {
     
     static let shared = MenuBarLyricsController()
     
-    let statusItem: NSStatusItem
+    private(set) var statusItem: NSStatusItem!
     var lyricsItem: NSStatusItem?
     var buttonImage = #imageLiteral(resourceName: "status_bar_icon")
-    var buttonlength: CGFloat = 30
     
     private var screenLyrics = "" {
         didSet {
@@ -37,7 +36,7 @@ class MenuBarLyricsController {
     private var cancelBag = Set<AnyCancellable>()
     
     private init() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        statusItem = makeStatusItem()
         AppController.shared.$currentLyrics
             .combineLatest(AppController.shared.$currentLineIndex)
             .receive(on: DispatchQueue.lyricsDisplay.cx)
@@ -52,6 +51,25 @@ class MenuBarLyricsController {
             .prepend()
             .invoke(MenuBarLyricsController.updateStatusItem, weaklyOn: self)
             .store(in: &cancelBag)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            self.writeStatusItemDiagnostics(reason: "launch")
+        }
+    }
+
+    private func makeStatusItem() -> NSStatusItem {
+        Self.prepareStatusItemPreferences()
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        item.autosaveName = "LyricsX"
+        item.isVisible = true
+        return item
+    }
+
+    private static func prepareStatusItemPreferences() {
+        let controlCenterDefaults = UserDefaults(suiteName: "com.apple.controlcenter")
+        controlCenterDefaults?.set(true, forKey: "NSStatusItem Visible LyricsX")
+        controlCenterDefaults?.set(false, forKey: "NSStatusItem VisibleCC LyricsX")
+        controlCenterDefaults?.set(120, forKey: "NSStatusItem Preferred Position LyricsX")
+        controlCenterDefaults?.synchronize()
     }
     
     private func handleLyricsDisplay(event: (lyrics: Lyrics?, index: Int?)) {
@@ -74,7 +92,7 @@ class MenuBarLyricsController {
     @objc private func updateStatusItem() {
         guard defaults[.menuBarLyricsEnabled], !screenLyrics.isEmpty else {
             setImageStatusItem()
-            lyricsItem = nil
+            removeLyricsItem()
             return
         }
         
@@ -90,13 +108,12 @@ class MenuBarLyricsController {
         
         if lyricsItem == nil {
             lyricsItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-            lyricsItem?.highlightMode = false
         }
-        lyricsItem?.title = screenLyrics
+        lyricsItem?.button?.title = screenLyrics
     }
     
     private func updateCombinedStatusLyrics() {
-        lyricsItem = nil
+        removeLyricsItem()
         
         setTextStatusItem(string: screenLyrics)
         if statusItem.isVisibe {
@@ -113,15 +130,111 @@ class MenuBarLyricsController {
     }
     
     private func setTextStatusItem(string: String) {
-        statusItem.title = string
-        statusItem.image = nil
         statusItem.length = NSStatusItem.variableLength
+        statusItem.button?.subviews.forEach { $0.removeFromSuperview() }
+        statusItem.button?.title = string
+        statusItem.button?.image = nil
     }
     
     private func setImageStatusItem() {
-        statusItem.title = ""
-        statusItem.image = buttonImage
-        statusItem.length = buttonlength
+        statusItem.length = NSStatusItem.variableLength
+        statusItem.isVisible = true
+        guard let button = statusItem.button else {
+            writeStatusItemDiagnostics(reason: "missing-button")
+            return
+        }
+        button.subviews.forEach { $0.removeFromSuperview() }
+        button.title = "LyricsX"
+        button.image = nil
+        button.toolTip = "LyricsX"
+        button.imagePosition = .noImage
+        button.isEnabled = true
+        button.isHidden = false
+        button.alphaValue = 1
+    }
+    
+    private func removeLyricsItem() {
+        if let lyricsItem = lyricsItem {
+            NSStatusBar.system.removeStatusItem(lyricsItem)
+            self.lyricsItem = nil
+        }
+    }
+
+    func writeStatusItemDiagnostics(reason: String) {
+        let button = statusItem.button
+        let window = button?.window
+        let frame = button.map { window?.convertToScreen($0.frame) ?? .zero } ?? .zero
+        let axHit = accessibilityHitDescription(at: frame.center)
+        let lines = [
+            "reason=\(reason)",
+            "pid=\(getpid())",
+            "isVisible=\(statusItem.isVisible)",
+            "length=\(statusItem.length)",
+            "hasButton=\(button != nil)",
+            "hasWindow=\(window != nil)",
+            "windowNumber=\(window?.windowNumber ?? 0)",
+            "windowLevel=\(window?.level.rawValue ?? 0)",
+            "windowClass=\(window.map { String(describing: type(of: $0)) } ?? "nil")",
+            "autosaveName=\(statusItem.autosaveName)",
+            "buttonFrame=\(button?.frame.debugDescription ?? "nil")",
+            "screenFrame=\(frame.debugDescription)",
+            "axHit=\(axHit)",
+            "title=\(button?.title ?? "nil")",
+            "hasImage=\(button?.image != nil)",
+            "subviews=\(button?.subviews.map { String(describing: type(of: $0)) }.joined(separator: ",") ?? "nil")",
+            "screens=\(NSScreen.screens.enumerated().map { idx, screen in "#\(idx) frame=\(screen.frame.debugDescription) visible=\(screen.visibleFrame.debugDescription)" }.joined(separator: " | "))",
+            "menuAttached=\(statusItem.menu != nil)",
+            "menuBarLyricsEnabled=\(defaults[.menuBarLyricsEnabled])",
+            "combinedMenubarLyrics=\(defaults[.combinedMenubarLyrics])"
+        ]
+        let output = lines.joined(separator: "\n") + "\n"
+        try? output.write(to: URL(fileURLWithPath: "/tmp/lyricsx-statusitem-check.log"), atomically: true, encoding: .utf8)
+        log(output)
+    }
+
+    func refreshStatusItemForDiagnostics(reason: String) {
+        updateStatusItem()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.writeStatusItemDiagnostics(reason: reason)
+        }
+    }
+
+    private func accessibilityHitDescription(at point: CGPoint) -> String {
+        guard point != .zero else {
+            return "nil"
+        }
+        let topLeftPoint = topLeftAccessibilityPoint(from: point)
+        guard let element = try? AXUIElement.systemWide().element(at: topLeftPoint) else {
+            return "nil"
+        }
+        let pid = (try? element.pid()) ?? 0
+        return "pid:\(pid)"
+    }
+
+    private func accessibilityHitPID(at point: CGPoint) -> pid_t {
+        guard point != .zero else {
+            return 0
+        }
+        let topLeftPoint = topLeftAccessibilityPoint(from: point)
+        guard let element = try? AXUIElement.systemWide().element(at: topLeftPoint),
+              let pid = try? element.pid() else {
+            return 0
+        }
+        return pid
+    }
+
+    private func topLeftAccessibilityPoint(from point: CGPoint) -> CGPoint {
+        guard let screen = NSScreen.screens.first(where: { $0.frame.contains(point) }) else {
+            return point
+        }
+        return CGPoint(x: point.x, y: screen.frame.height - point.y - 1)
+    }
+
+}
+
+private extension CGRect {
+    var center: CGPoint {
+        CGPoint(x: midX, y: midY)
     }
 }
 

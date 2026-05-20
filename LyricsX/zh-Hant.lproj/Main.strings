@@ -78,3 +78,14 @@
 
 /* Class = "NSMenuItem"; title = "Enable Menu Bar Lyrics"; ObjectID = "Z7d-yp-uRx"; */
 "Z7d-yp-uRx.title" = "啟用選單列歌詞";
+
+"About LyricsX" = "關於 LyricsX";
+"Check For Update..." = "檢查更新⋯";
+"Enable Karaoke Lyrics" = "啟用動態歌詞";
+"Enable Menu Bar Lyrics" = "啟用選單列歌詞";
+"Preferences..." = "偏好設定⋯";
+"Quit LyricsX" = "關閉 LyricsX";
+"Search Lyrics..." = "搜尋歌詞⋯";
+"Show Lyrics Window" = "顯示歌詞視窗";
+"Write to iTunes" = "將歌詞寫入 iTunes 歌曲";
+"Wrong Lyrics" = "目前歌詞有誤";

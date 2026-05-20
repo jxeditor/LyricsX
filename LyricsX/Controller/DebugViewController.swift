@@ -8,11 +8,15 @@
 //
 
 import Cocoa
+#if ENABLE_APPCENTER && canImport(AppCenterCrashes)
 import AppCenterCrashes
+#endif
 
 class DebugViewController: NSViewController {
     
     @IBAction func crashActioin(_ sender: Any) {
+        #if ENABLE_APPCENTER && canImport(AppCenterCrashes)
         Crashes.generateTestCrash()
+        #endif
     }
 }

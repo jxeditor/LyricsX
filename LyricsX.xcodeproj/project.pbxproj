@@ -97,6 +97,7 @@
 		BB58B07F1E82901800598D4F /* AutoActivateWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB58B07E1E82901800598D4F /* AutoActivateWindowController.swift */; };
 		BB58B0821E82971400598D4F /* UserDefaults.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB58B0811E82971400598D4F /* UserDefaults.plist */; };
 		BB58B0891E82CA9B00598D4F /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = BB58B0881E82CA9B00598D4F /* Credits.rtf */; };
+		BB58B08A1E82971400598D4F /* media-control in Resources */ = {isa = PBXBuildFile; fileRef = BB58B08B1E82971400598D4F /* media-control */; };
 		BB58D8BF248636900047E3C6 /* DonateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB58D8BE248636900047E3C6 /* DonateViewController.swift */; };
 		BB58D8C0248636900047E3C6 /* DonateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB58D8BE248636900047E3C6 /* DonateViewController.swift */; };
 		BB58D8C2248638950047E3C6 /* DebugViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB58D8C1248638950047E3C6 /* DebugViewController.swift */; };
@@ -236,6 +237,7 @@
 		BB58B07E1E82901800598D4F /* AutoActivateWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AutoActivateWindowController.swift; sourceTree = "<group>"; };
 		BB58B0811E82971400598D4F /* UserDefaults.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = UserDefaults.plist; sourceTree = "<group>"; };
 		BB58B0881E82CA9B00598D4F /* Credits.rtf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
+		BB58B08B1E82971400598D4F /* media-control */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "media-control"; sourceTree = "<group>"; };
 		BB58D8BE248636900047E3C6 /* DonateViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonateViewController.swift; sourceTree = "<group>"; };
 		BB58D8C1248638950047E3C6 /* DebugViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugViewController.swift; sourceTree = "<group>"; };
 		BB5C552F232B5D1B00448FC0 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Main.strings; sourceTree = "<group>"; };
@@ -338,8 +340,6 @@
 				BB34F4A91EFFBCBC008B9E4B /* MASShortcut.framework in Frameworks */,
 				BB22681C234C9085008FAFED /* SwiftCF in Frameworks */,
 				BB6C75E8248B908500804AEB /* TouchBarHelper in Frameworks */,
-				BBA82EFB256AB1490076831F /* AppCenterCrashes in Frameworks */,
-				BBA82EFD256AB1490076831F /* AppCenterAnalytics in Frameworks */,
 				BBB03F2D232FB3AF00A3879E /* GenericID in Frameworks */,
 				BBB03F3D2331DACD00A3879E /* LyricsKit in Frameworks */,
 				BB350ABE23D0613D00500146 /* CXExtensions in Frameworks */,
@@ -356,9 +356,7 @@
 				BBB03F3F2331DBB000A3879E /* GenericID in Frameworks */,
 				BBB03F452331DBB000A3879E /* LyricsKit in Frameworks */,
 				BB22681E234C908D008FAFED /* SwiftCF in Frameworks */,
-				BBA82F03256AB29F0076831F /* AppCenterAnalytics in Frameworks */,
 				BB350AC023D0614800500146 /* CXExtensions in Frameworks */,
-				BBA82F05256AB29F0076831F /* AppCenterCrashes in Frameworks */,
 				BBB03F412331DBB000A3879E /* Semver in Frameworks */,
 				BB9C3D8523435A6300860698 /* MusicPlayer in Frameworks */,
 				BB50788F22014C3900B695C3 /* SnapKit.framework in Frameworks */,
@@ -432,6 +430,7 @@
 				BB4141B61E458BA900A51775 /* Info.plist */,
 				BB58B0811E82971400598D4F /* UserDefaults.plist */,
 				BB58B0881E82CA9B00598D4F /* Credits.rtf */,
+				BB58B08B1E82971400598D4F /* media-control */,
 			);
 			path = "Supporting Files";
 			sourceTree = "<group>";
@@ -559,8 +558,6 @@
 				BB350ABD23D0613D00500146 /* CXExtensions */,
 				BB6C75E7248B908500804AEB /* TouchBarHelper */,
 				BB003EFE248F89A700860FF7 /* CXShim */,
-				BBA82EFA256AB1490076831F /* AppCenterCrashes */,
-				BBA82EFC256AB1490076831F /* AppCenterAnalytics */,
 				BBA82F09256AB8620076831F /* Sparkle */,
 			);
 			productName = LyricsX;
@@ -596,8 +593,6 @@
 				BB350ABF23D0614800500146 /* CXExtensions */,
 				BB6C75E9248B908F00804AEB /* TouchBarHelper */,
 				BB003F00248F89B700860FF7 /* CXShim */,
-				BBA82F02256AB29F0076831F /* AppCenterAnalytics */,
-				BBA82F04256AB29F0076831F /* AppCenterCrashes */,
 			);
 			productName = LyricsX;
 			productReference = BB5078AD22014C3900B695C3 /* LyricsX.app */;
@@ -700,14 +695,14 @@
 			);
 			mainGroup = BB4141A11E458BA800A51775;
 			packageReferences = (
-				BBB03F2B232FB3AF00A3879E /* XCRemoteSwiftPackageReference "GenericID" */,
-				BBB03F2E232FB40400A3879E /* XCRemoteSwiftPackageReference "Semver" */,
-				BBB03F382331D8A800A3879E /* XCRemoteSwiftPackageReference "SwiftyOpenCC" */,
-				BBB03F3B2331DACD00A3879E /* XCRemoteSwiftPackageReference "LyricsKit" */,
-				BB9C3D8123435A5700860698 /* XCRemoteSwiftPackageReference "MusicPlayer" */,
-				BB22681A234C9085008FAFED /* XCRemoteSwiftPackageReference "SwiftCF" */,
+				BBB03F2B232FB3AF00A3879E /* XCLocalSwiftPackageReference "GenericID" */,
+				BBB03F2E232FB40400A3879E /* XCLocalSwiftPackageReference "Semver" */,
+				BBB03F382331D8A800A3879E /* XCLocalSwiftPackageReference "SwiftyOpenCC" */,
+				BBB03F3B2331DACD00A3879E /* XCLocalSwiftPackageReference "LyricsKit" */,
+				BB9C3D8123435A5700860698 /* XCLocalSwiftPackageReference "MusicPlayer" */,
+				BB22681A234C9085008FAFED /* XCLocalSwiftPackageReference "SwiftCF" */,
 				BB350ABC23D0613D00500146 /* XCRemoteSwiftPackageReference "CXExtensions" */,
-				BB6C75E6248B908500804AEB /* XCRemoteSwiftPackageReference "TouchBarHelper" */,
+				BB6C75E6248B908500804AEB /* XCLocalSwiftPackageReference "TouchBarHelper" */,
 				BB003EFD248F89A700860FF7 /* XCRemoteSwiftPackageReference "CombineX" */,
 				BBA82EF9256AB1490076831F /* XCRemoteSwiftPackageReference "appcenter-sdk-apple" */,
 				BBA82F08256AB8620076831F /* XCRemoteSwiftPackageReference "Sparkle" */,
@@ -736,6 +731,7 @@
 				BB58B0821E82971400598D4F /* UserDefaults.plist in Resources */,
 				BB4141B51E458BA900A51775 /* Main.storyboard in Resources */,
 				BB58B0891E82CA9B00598D4F /* Credits.rtf in Resources */,
+				BB58B08A1E82971400598D4F /* media-control in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -869,7 +865,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "buildNumber=$(/usr/libexec/PlistBuddy -c \"Print CFBundleVersion\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\nbuildNumber=$(($buildNumber + 1))\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"";
+			shellScript = "version=$(/usr/libexec/PlistBuddy -c \"Print CFBundleShortVersionString\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\nif [ \"$version\" != \"1.6.4.beta\" ]; then\n  /usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString 1.6.4.beta\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"\nfi\nbuildNumber=$(/usr/libexec/PlistBuddy -c \"Print CFBundleVersion\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\ncase \"$buildNumber\" in\n  ''|*[!0-9]*) buildNumber=164 ;;\nesac\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"";
 		};
 		BB9163341F36371700E4E01C /* Upload dSYM */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -898,7 +894,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "buildNumber=$(/usr/libexec/PlistBuddy -c \"Print CFBundleVersion\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\nbuildNumber=$(($buildNumber + 1))\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"";
+			shellScript = "version=$(/usr/libexec/PlistBuddy -c \"Print CFBundleShortVersionString\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\nif [ \"$version\" != \"1.6.4.beta\" ]; then\n  /usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString 1.6.4.beta\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"\nfi\nbuildNumber=$(/usr/libexec/PlistBuddy -c \"Print CFBundleVersion\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\ncase \"$buildNumber\" in\n  ''|*[!0-9]*) buildNumber=164 ;;\nesac\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -1435,13 +1431,9 @@
 				minimumVersion = 0.4.0;
 			};
 		};
-		BB22681A234C9085008FAFED /* XCRemoteSwiftPackageReference "SwiftCF" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ddddxxx/SwiftCF";
-			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 0.2.1;
-			};
+		BB22681A234C9085008FAFED /* XCLocalSwiftPackageReference "SwiftCF" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/SwiftCF;
 		};
 		BB350ABC23D0613D00500146 /* XCRemoteSwiftPackageReference "CXExtensions" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -1451,21 +1443,13 @@
 				minimumVersion = 0.4.0;
 			};
 		};
-		BB6C75E6248B908500804AEB /* XCRemoteSwiftPackageReference "TouchBarHelper" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ddddxxx/TouchBarHelper";
-			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 0.1.0;
-			};
+		BB6C75E6248B908500804AEB /* XCLocalSwiftPackageReference "TouchBarHelper" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/TouchBarHelper;
 		};
-		BB9C3D8123435A5700860698 /* XCRemoteSwiftPackageReference "MusicPlayer" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ddddxxx/MusicPlayer";
-			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 0.8.2;
-			};
+		BB9C3D8123435A5700860698 /* XCLocalSwiftPackageReference "MusicPlayer" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/MusicPlayer;
 		};
 		BBA82EF9256AB1490076831F /* XCRemoteSwiftPackageReference "appcenter-sdk-apple" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -1483,37 +1467,21 @@
 				minimumVersion = 1.26.0;
 			};
 		};
-		BBB03F2B232FB3AF00A3879E /* XCRemoteSwiftPackageReference "GenericID" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ddddxxx/GenericID";
-			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 0.7.0;
-			};
+		BBB03F2B232FB3AF00A3879E /* XCLocalSwiftPackageReference "GenericID" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/GenericID;
 		};
-		BBB03F2E232FB40400A3879E /* XCRemoteSwiftPackageReference "Semver" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ddddxxx/Semver";
-			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 0.2.0;
-			};
+		BBB03F2E232FB40400A3879E /* XCLocalSwiftPackageReference "Semver" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/Semver;
 		};
-		BBB03F382331D8A800A3879E /* XCRemoteSwiftPackageReference "SwiftyOpenCC" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ddddxxx/SwiftyOpenCC";
-			requirement = {
-				branch = "v2.0.0-beta";
-				kind = branch;
-			};
+		BBB03F382331D8A800A3879E /* XCLocalSwiftPackageReference "SwiftyOpenCC" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/SwiftyOpenCC;
 		};
-		BBB03F3B2331DACD00A3879E /* XCRemoteSwiftPackageReference "LyricsKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ddddxxx/LyricsKit";
-			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 0.11.0;
-			};
+		BBB03F3B2331DACD00A3879E /* XCLocalSwiftPackageReference "LyricsKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/LyricsKit;
 		};
 /* End XCRemoteSwiftPackageReference section */
 
@@ -1530,12 +1498,12 @@
 		};
 		BB22681B234C9085008FAFED /* SwiftCF */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = BB22681A234C9085008FAFED /* XCRemoteSwiftPackageReference "SwiftCF" */;
+			package = BB22681A234C9085008FAFED /* XCLocalSwiftPackageReference "SwiftCF" */;
 			productName = SwiftCF;
 		};
 		BB22681D234C908D008FAFED /* SwiftCF */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = BB22681A234C9085008FAFED /* XCRemoteSwiftPackageReference "SwiftCF" */;
+			package = BB22681A234C9085008FAFED /* XCLocalSwiftPackageReference "SwiftCF" */;
 			productName = SwiftCF;
 		};
 		BB350ABD23D0613D00500146 /* CXExtensions */ = {
@@ -1550,22 +1518,22 @@
 		};
 		BB6C75E7248B908500804AEB /* TouchBarHelper */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = BB6C75E6248B908500804AEB /* XCRemoteSwiftPackageReference "TouchBarHelper" */;
+			package = BB6C75E6248B908500804AEB /* XCLocalSwiftPackageReference "TouchBarHelper" */;
 			productName = TouchBarHelper;
 		};
 		BB6C75E9248B908F00804AEB /* TouchBarHelper */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = BB6C75E6248B908500804AEB /* XCRemoteSwiftPackageReference "TouchBarHelper" */;
+			package = BB6C75E6248B908500804AEB /* XCLocalSwiftPackageReference "TouchBarHelper" */;
 			productName = TouchBarHelper;
 		};
 		BB9C3D8223435A5700860698 /* MusicPlayer */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = BB9C3D8123435A5700860698 /* XCRemoteSwiftPackageReference "MusicPlayer" */;
+			package = BB9C3D8123435A5700860698 /* XCLocalSwiftPackageReference "MusicPlayer" */;
 			productName = MusicPlayer;
 		};
 		BB9C3D8423435A6300860698 /* MusicPlayer */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = BB9C3D8123435A5700860698 /* XCRemoteSwiftPackageReference "MusicPlayer" */;
+			package = BB9C3D8123435A5700860698 /* XCLocalSwiftPackageReference "MusicPlayer" */;
 			productName = MusicPlayer;
 		};
 		BBA82EFA256AB1490076831F /* AppCenterCrashes */ = {
@@ -1595,42 +1563,42 @@
 		};
 		BBB03F2C232FB3AF00A3879E /* GenericID */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = BBB03F2B232FB3AF00A3879E /* XCRemoteSwiftPackageReference "GenericID" */;
+			package = BBB03F2B232FB3AF00A3879E /* XCLocalSwiftPackageReference "GenericID" */;
 			productName = GenericID;
 		};
 		BBB03F2F232FB40400A3879E /* Semver */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = BBB03F2E232FB40400A3879E /* XCRemoteSwiftPackageReference "Semver" */;
+			package = BBB03F2E232FB40400A3879E /* XCLocalSwiftPackageReference "Semver" */;
 			productName = Semver;
 		};
 		BBB03F392331D8A800A3879E /* OpenCC */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = BBB03F382331D8A800A3879E /* XCRemoteSwiftPackageReference "SwiftyOpenCC" */;
+			package = BBB03F382331D8A800A3879E /* XCLocalSwiftPackageReference "SwiftyOpenCC" */;
 			productName = OpenCC;
 		};
 		BBB03F3C2331DACD00A3879E /* LyricsKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = BBB03F3B2331DACD00A3879E /* XCRemoteSwiftPackageReference "LyricsKit" */;
+			package = BBB03F3B2331DACD00A3879E /* XCLocalSwiftPackageReference "LyricsKit" */;
 			productName = LyricsKit;
 		};
 		BBB03F3E2331DBB000A3879E /* GenericID */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = BBB03F2B232FB3AF00A3879E /* XCRemoteSwiftPackageReference "GenericID" */;
+			package = BBB03F2B232FB3AF00A3879E /* XCLocalSwiftPackageReference "GenericID" */;
 			productName = GenericID;
 		};
 		BBB03F402331DBB000A3879E /* Semver */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = BBB03F2E232FB40400A3879E /* XCRemoteSwiftPackageReference "Semver" */;
+			package = BBB03F2E232FB40400A3879E /* XCLocalSwiftPackageReference "Semver" */;
 			productName = Semver;
 		};
 		BBB03F422331DBB000A3879E /* OpenCC */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = BBB03F382331D8A800A3879E /* XCRemoteSwiftPackageReference "SwiftyOpenCC" */;
+			package = BBB03F382331D8A800A3879E /* XCLocalSwiftPackageReference "SwiftyOpenCC" */;
 			productName = OpenCC;
 		};
 		BBB03F442331DBB000A3879E /* LyricsKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = BBB03F3B2331DACD00A3879E /* XCRemoteSwiftPackageReference "LyricsKit" */;
+			package = BBB03F3B2331DACD00A3879E /* XCLocalSwiftPackageReference "LyricsKit" */;
 			productName = LyricsKit;
 		};
 /* End XCSwiftPackageProductDependency section */

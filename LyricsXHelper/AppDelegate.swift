@@ -1,82 +1,100 @@
 //
 //  AppDelegate.swift
-//  LyricsX - https://github.com/ddddxxx/LyricsX
-//
-//  This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+//  LyricsXHelper
 //
 
 import Cocoa
-import ScriptingBridge
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
-    
-    var musicPlayers: [SBApplication] = []
-    var shouldWaitForPlayerQuit = false
 
-    func applicationDidFinishLaunching(_ aNotification: Notification) {
-        guard groupDefaults.bool(forKey: launchAndQuitWithPlayer) else {
-            NSApplication.shared.terminate(nil)
-            abort() // fake invoking, just make compiler happy.
-        }
-        
-        let index = groupDefaults.integer(forKey: preferredPlayerIndex)
-        let ident = playerBundleIdentifiers[index]
-        musicPlayers = ident.compactMap(SBApplication.init)
-        
-        let event = NSAppleEventManager.shared().currentAppleEvent
-        let isLaunchedAsLoginItem = event?.eventID == kAEOpenApplication &&
-            event?.paramDescriptor(forKeyword: keyAEPropData)?.enumCodeValue == keyAELaunchedAsLogInItem
-        let isLaunchedByMain = (groupDefaults.object(forKey: launchHelperTime) as? Date).map { Date().timeIntervalSince($0) < 10 } ?? false
-        shouldWaitForPlayerQuit = !isLaunchedAsLoginItem && isLaunchedByMain && musicPlayers.contains { $0.isRunning }
-        
-        let wsnc = NSWorkspace.shared.notificationCenter
-        wsnc.addObserver(self, selector: #selector(checkTargetApplication), name: NSWorkspace.didLaunchApplicationNotification, object: nil)
-        wsnc.addObserver(self, selector: #selector(checkTargetApplication), name: NSWorkspace.didTerminateApplicationNotification, object: nil)
-        
-        checkTargetApplication()
+    private var statusItem: NSStatusItem!
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.setActivationPolicy(.accessory)
+        createStatusItem()
+        writeDiagnostics(reason: "launch")
     }
-    
-    @objc func checkTargetApplication() {
-        let isRunning = musicPlayers.contains { $0.isRunning }
-        if shouldWaitForPlayerQuit {
-            shouldWaitForPlayerQuit = isRunning
+
+    private func createStatusItem() {
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        statusItem.button?.title = "LyricsX"
+        statusItem.button?.toolTip = "LyricsX"
+        statusItem.menu = makeMenu()
+    }
+
+    private func makeMenu() -> NSMenu {
+        let menu = NSMenu(title: "LyricsX")
+        menu.addItem(item("显示歌词窗口", action: #selector(showLyricsWindow)))
+        menu.addItem(item("搜索歌词...", action: #selector(searchLyrics)))
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(item("切换菜单栏歌词", action: #selector(toggleMenuBarLyrics)))
+        menu.addItem(item("切换桌面歌词", action: #selector(toggleDesktopLyrics)))
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(item("偏好设置...", action: #selector(showPreferences)))
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(item("退出 LyricsX", action: #selector(quitLyricsX)))
+        return menu
+    }
+
+    private func item(_ title: String, action: Selector) -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
+        item.target = self
+        return item
+    }
+
+    @objc private func showLyricsWindow() {
+        openMain(action: "show-lyrics-window")
+    }
+
+    @objc private func searchLyrics() {
+        openMain(action: "search")
+    }
+
+    @objc private func toggleMenuBarLyrics() {
+        openMain(action: "toggle-menu-bar-lyrics")
+    }
+
+    @objc private func toggleDesktopLyrics() {
+        openMain(action: "toggle-desktop-lyrics")
+    }
+
+    @objc private func showPreferences() {
+        openMain(action: "preferences")
+    }
+
+    @objc private func quitLyricsX() {
+        openMain(action: "quit")
+        NSApp.terminate(nil)
+    }
+
+    private func openMain(action: String? = nil) {
+        if let action = action, let url = URL(string: "lyricsx://\(action)") {
+            NSWorkspace.shared.open(url)
             return
-        } else if isRunning {
-            self.launchMainAndQuit()
         }
-    }
 
-    func launchMainAndQuit() -> Never {
         var host = Bundle.main.bundleURL
         for _ in 0..<4 {
             host.deleteLastPathComponent()
         }
-        do {
-            try NSWorkspace.shared.launchApplication(at: host, configuration: [:])
-            NSLog("launch LyricsX succeed.")
-        } catch {
-            NSLog("launch LyricsX failed. reason: \(error)")
-        }
-        NSApp.terminate(nil)
-        abort() // fake invoking, just make compiler happy.
+        try? NSWorkspace.shared.launchApplication(at: host, configuration: [:])
     }
 
+    private func writeDiagnostics(reason: String) {
+        let button = statusItem.button
+        let window = button?.window
+        let frame = button.map { window?.convertToScreen($0.frame) ?? .zero } ?? .zero
+        let lines = [
+            "reason=\(reason)",
+            "pid=\(getpid())",
+            "buttonFrame=\(button?.frame.debugDescription ?? "nil")",
+            "screenFrame=\(frame.debugDescription)",
+            "title=\(button?.title ?? "nil")",
+            "menuAttached=\(statusItem.menu != nil)"
+        ]
+        try? (lines.joined(separator: "\n") + "\n").write(to: URL(fileURLWithPath: "/tmp/lyricsx-helper-statusitem-check.log"),
+                                                          atomically: true,
+                                                          encoding: .utf8)
+    }
 }
-
-let playerBundleIdentifiers = [
-    ["com.apple.Music", "com.apple.iTunes"],
-    ["com.spotify.client"],
-    ["com.coppertino.Vox"],
-    ["com.audirvana.Audirvana-Studio", "com.audirvana.Audirvana", "com.audirvana.Audirvana-Plus"],
-    ["com.swinsian.Swinsian"],
-]
-
-let groupDefaults = UserDefaults(suiteName: "3665V726AE.group.ddddxxx.LyricsX")!
-
-// Preference
-let preferredPlayerIndex = "PreferredPlayerIndex"
-let launchAndQuitWithPlayer = "LaunchAndQuitWithPlayer"
-let launchHelperTime = "launchHelperTime"

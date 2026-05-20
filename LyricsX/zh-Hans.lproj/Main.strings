@@ -78,3 +78,14 @@
 
 /* Class = "NSMenuItem"; title = "Enable Menu Bar Lyrics"; ObjectID = "Z7d-yp-uRx"; */
 "Z7d-yp-uRx.title" = "启用菜单栏歌词";
+
+"About LyricsX" = "关于 LyricsX";
+"Check For Update..." = "检查更新...";
+"Enable Karaoke Lyrics" = "启用逐行歌词";
+"Enable Menu Bar Lyrics" = "启用菜单栏歌词";
+"Preferences..." = "偏好设置...";
+"Quit LyricsX" = "退出 LyricsX";
+"Search Lyrics..." = "搜索歌词...";
+"Show Lyrics Window" = "显示歌词窗口";
+"Write to iTunes" = "写入歌词到 iTunes";
+"Wrong Lyrics" = "错误的歌词";

@@ -1,1 +1,8 @@
 Product
+.DerivedData/
+MASShortcut-DerivedData/
+Carthage/
+build.log
+*.xcuserstate
+xcuserdata/
+.DS_Store

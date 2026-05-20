@@ -24,6 +24,7 @@ class MenuBarLyricsController {
     private(set) var statusItem: NSStatusItem!
     var lyricsItem: NSStatusItem?
     var buttonImage = #imageLiteral(resourceName: "status_bar_icon")
+    private let statusIconWidth: CGFloat = 176
     
     private var screenLyrics = "" {
         didSet {
@@ -57,7 +58,7 @@ class MenuBarLyricsController {
     }
 
     private func makeStatusItem() -> NSStatusItem {
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        let item = NSStatusBar.system.statusItem(withLength: statusIconWidth)
         item.isVisible = true
         return item
     }
@@ -128,7 +129,7 @@ class MenuBarLyricsController {
     }
     
     private func setImageStatusItem() {
-        statusItem.length = NSStatusItem.squareLength
+        statusItem.length = statusIconWidth
         statusItem.isVisible = true
         guard let button = statusItem.button else {
             writeStatusItemDiagnostics(reason: "missing-button")
@@ -136,12 +137,16 @@ class MenuBarLyricsController {
         }
         button.subviews.forEach { $0.removeFromSuperview() }
         button.title = ""
-        button.image = buttonImage
+        button.image = nil
         button.toolTip = "LyricsX"
-        button.imagePosition = .imageOnly
+        button.imagePosition = .noImage
         button.isEnabled = true
         button.isHidden = false
         button.alphaValue = 1
+        let iconView = MenuBarStatusIconView(image: buttonImage)
+        iconView.frame = button.bounds
+        iconView.autoresizingMask = [.width, .height]
+        button.addSubview(iconView)
     }
     
     private func removeLyricsItem() {
@@ -226,6 +231,45 @@ class MenuBarLyricsController {
 private extension CGRect {
     var center: CGPoint {
         CGPoint(x: midX, y: midY)
+    }
+}
+
+private final class MenuBarStatusIconView: NSView {
+
+    private let image: NSImage
+
+    init(image: NSImage) {
+        self.image = image
+        super.init(frame: .zero)
+        wantsLayer = false
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override var isFlipped: Bool {
+        true
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        let iconSize = CGSize(width: 18, height: 18)
+        let rect = CGRect(x: 8,
+                          y: (bounds.height - iconSize.height) / 2,
+                          width: iconSize.width,
+                          height: iconSize.height)
+        NSGraphicsContext.saveGraphicsState()
+        image.draw(in: rect,
+                   from: .zero,
+                   operation: .sourceOver,
+                   fraction: 1,
+                   respectFlipped: true,
+                   hints: nil)
+        NSColor.labelColor.setFill()
+        rect.fill(using: .sourceIn)
+        NSGraphicsContext.restoreGraphicsState()
     }
 }
 

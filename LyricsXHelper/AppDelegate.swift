@@ -17,10 +17,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func createStatusItem() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem.button?.title = "LyricsX"
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        statusItem.button?.title = ""
+        statusItem.button?.image = statusIcon()
+        statusItem.button?.imagePosition = .imageOnly
         statusItem.button?.toolTip = "LyricsX"
         statusItem.menu = makeMenu()
+    }
+
+    private func statusIcon() -> NSImage? {
+        var host = Bundle.main.bundleURL
+        for _ in 0..<4 {
+            host.deleteLastPathComponent()
+        }
+        let image = Bundle(url: host)?.image(forResource: "status_bar_icon")
+            ?? NSImage(named: NSImage.Name("NSApplicationIcon"))
+        image?.isTemplate = true
+        return image
     }
 
     private func makeMenu() -> NSMenu {
@@ -91,6 +104,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             "buttonFrame=\(button?.frame.debugDescription ?? "nil")",
             "screenFrame=\(frame.debugDescription)",
             "title=\(button?.title ?? "nil")",
+            "hasImage=\(button?.image != nil)",
             "menuAttached=\(statusItem.menu != nil)"
         ]
         try? (lines.joined(separator: "\n") + "\n").write(to: URL(fileURLWithPath: "/tmp/lyricsx-helper-statusitem-check.log"),

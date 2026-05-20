@@ -65,12 +65,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSMenu
         karaokeLyricsWC?.showWindow(nil)
         
         statusBarMenu.delegate = self
-        MenuBarLyricsController.shared.statusItem.menu = statusBarMenu
         installMainMenuFallback()
         NSAppleEventManager.shared().setEventHandler(self,
                                                      andSelector: #selector(handleGetURLEvent(_:withReplyEvent:)),
                                                      forEventClass: AEEventClass(kInternetEventClass),
                                                      andEventID: AEEventID(kAEGetURL))
+        launchMenuBarHelper()
         
         lyricsOffsetStepper.bind(.value,
                                  to: controller,

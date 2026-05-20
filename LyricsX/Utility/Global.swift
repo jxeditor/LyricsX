@@ -149,6 +149,7 @@ extension UserDefaults.DefaultsKeys {
     static let autoTimingLyricsEnabled = Key<Bool>("AutoTimingLyricsEnabled")
     static let spotifyPrivateLyricsEnabled = Key<Bool>("SpotifyPrivateLyricsEnabled")
     static let spotifyPrivateLyricsToken = Key<String>("SpotifyPrivateLyricsToken")
+    static let spotifyPrivateLyricsClientToken = Key<String>("SpotifyPrivateLyricsClientToken")
     static let spotifyPrivateLyricsTokenSavedAt = Key<Date?>("SpotifyPrivateLyricsTokenSavedAt")
     static let spotifyPrivateLyricsAutoResult = Key<String>("SpotifyPrivateLyricsAutoResult")
     static let spotifyPrivateLyricsStatus = Key<String>("SpotifyPrivateLyricsStatus")

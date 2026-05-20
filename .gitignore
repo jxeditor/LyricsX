@@ -1,6 +1,7 @@
 Product
 .DerivedData/
 MASShortcut-DerivedData/
+**/.build/
 Carthage/
 build.log
 *.xcuserstate

@@ -79,7 +79,12 @@ class SearchLyricsViewController: NSViewController, NSTableViewDelegate, NSTable
         
         let track = selectedPlayer.currentTrack
         let duration = track?.duration ?? 0
-        let req = LyricsSearchRequest(searchTerm: .info(title: searchTitle, artist: searchArtist), duration: duration, limit: 8)
+        var userInfo: [String: String] = [:]
+        if let track = track, selectedPlayer.name == .spotify || track.id.hasPrefix("spotify:track:") {
+            userInfo["spotifyTrackID"] = track.id.replacingOccurrences(of: "spotify:track:", with: "")
+            userInfo["trackID"] = track.id
+        }
+        let req = LyricsSearchRequest(searchTerm: .info(title: searchTitle, artist: searchArtist), duration: duration, limit: 8, userInfo: userInfo)
         searchRequest = req
         searchCanceller = lyricsManager.lyricsPublisher(request: req)
             .sink(receiveCompletion: { [unowned self] _ in

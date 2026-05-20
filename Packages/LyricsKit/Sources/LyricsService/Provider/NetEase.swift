@@ -17,8 +17,8 @@ import Regex
 import FoundationNetworking
 #endif
 
-private let netEaseSearchBaseURLString = "http://music.163.com/api/search/pc?"
-private let netEaseLyricsBaseURLString = "http://music.163.com/api/song/lyric?"
+private let netEaseSearchBaseURLString = "https://music.163.com/api/search/get/web?"
+private let netEaseLyricsBaseURLString = "https://music.163.com/api/song/lyric?"
 
 extension LyricsProviders {
     public final class NetEase {
@@ -43,8 +43,10 @@ extension LyricsProviders.NetEase: _LyricsProvider {
             ]
         let url = URL(string: netEaseSearchBaseURLString + parameter.stringFromHttpParameters)!
         var req = URLRequest(url: url)
-        req.httpMethod = "POST"
-        req.setValue("http://music.163.com/", forHTTPHeaderField: "Referer")
+        req.httpMethod = "GET"
+        req.setValue("https://music.163.com/", forHTTPHeaderField: "Referer")
+        req.setValue(netEaseUserAgent, forHTTPHeaderField: "User-Agent")
+        req.setValue("application/json,text/plain,*/*", forHTTPHeaderField: "Accept")
         
         return sharedURLSession.cx.dataTaskPublisher(for: req)
             .map(\.data)
@@ -64,7 +66,11 @@ extension LyricsProviders.NetEase: _LyricsProvider {
             "tv": -1,
         ]
         let url = URL(string: netEaseLyricsBaseURLString + parameter.stringFromHttpParameters)!
-        return sharedURLSession.cx.dataTaskPublisher(for: url)
+        var req = URLRequest(url: url)
+        req.setValue("https://music.163.com/", forHTTPHeaderField: "Referer")
+        req.setValue(netEaseUserAgent, forHTTPHeaderField: "User-Agent")
+        req.setValue("application/json,text/plain,*/*", forHTTPHeaderField: "Accept")
+        return sharedURLSession.cx.dataTaskPublisher(for: req)
             .map(\.data)
             .decode(type: NetEaseResponseSingleLyrics.self, decoder: JSONDecoder().cx)
             .compactMap {
@@ -97,6 +103,8 @@ extension LyricsProviders.NetEase: _LyricsProvider {
             .eraseToAnyPublisher()
     }
 }
+
+private let netEaseUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15"
 
 private let netEaseTimeTagFixer = Regex(#"(\[\d+:\d+):(\d+\])"#)
 

@@ -36,24 +36,6 @@
           "revision": "ba0b6cb51cc6202f896e469b87d2889a46b10d1b",
           "version": "5.1.1"
         }
-      },
-      {
-        "package": "Regex",
-        "repositoryURL": "https://github.com/ddddxxx/Regex",
-        "state": {
-          "branch": null,
-          "revision": "c0ad0a7e9a48989d9688c2b524a1e69b6293b733",
-          "version": "1.0.1"
-        }
-      },
-      {
-        "package": "SwiftCF",
-        "repositoryURL": "https://github.com/ddddxxx/SwiftCF",
-        "state": {
-          "branch": null,
-          "revision": "8d0425466f0660826a26ad3d77df447ecf6950a3",
-          "version": "0.2.0"
-        }
       }
     ]
   },

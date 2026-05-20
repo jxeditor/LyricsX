@@ -363,6 +363,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSMenu
             .autoTimingLyricsEnabled: false,
             .spotifyPrivateLyricsEnabled: false,
             .spotifyPrivateLyricsToken: "",
+            .spotifyPrivateLyricsClientToken: "",
             .spotifyPrivateLyricsAutoResult: "",
             .spotifyPrivateLyricsStatus: "",
         ])
@@ -371,6 +372,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSMenu
     private func configureLyricsProviders() {
         LyricsProviders.SpotifyPrivate.accessTokenProvider = {
             defaults[.spotifyPrivateLyricsEnabled] ? defaults[.spotifyPrivateLyricsToken] : nil
+        }
+        LyricsProviders.SpotifyPrivate.clientTokenProvider = {
+            defaults[.spotifyPrivateLyricsEnabled] ? defaults[.spotifyPrivateLyricsClientToken] : nil
+        }
+        LyricsProviders.SpotifyPrivate.imageURLProvider = {
+            guard defaults[.spotifyPrivateLyricsEnabled],
+                  selectedPlayer.name == .spotify,
+                  let track = selectedPlayer.currentTrack,
+                  let sbTrack = track.originalSBTrack,
+                  let artworkURL = sbTrack.value(forKey: "artworkUrl") as? String,
+                  !artworkURL.isEmpty else {
+                return nil
+            }
+            return artworkURL
         }
         LyricsProviders.SpotifyPrivate.statusHandler = { status in
             DispatchQueue.main.async {

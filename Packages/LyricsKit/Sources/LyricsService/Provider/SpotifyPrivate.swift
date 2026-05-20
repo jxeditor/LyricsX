@@ -18,6 +18,8 @@ import FoundationNetworking
 extension LyricsProviders {
     public final class SpotifyPrivate {
         public static var accessTokenProvider: (() -> String?)?
+        public static var clientTokenProvider: (() -> String?)?
+        public static var imageURLProvider: (() -> String?)?
         public static var statusHandler: ((String) -> Void)?
 
         public init() {}
@@ -28,6 +30,9 @@ extension LyricsProviders.SpotifyPrivate: _LyricsProvider {
 
     public struct LyricsToken {
         let trackID: String
+        let title: String?
+        let artist: String?
+        let duration: TimeInterval
     }
 
     public static let service: LyricsProviders.Service? = .spotifyPrivate
@@ -37,7 +42,14 @@ extension LyricsProviders.SpotifyPrivate: _LyricsProvider {
             Self.statusHandler?("当前曲目没有 Spotify track id")
             return Empty().eraseToAnyPublisher()
         }
-        return Just(LyricsToken(trackID: trackID)).eraseToAnyPublisher()
+        let trackInfo = titleAndArtist(from: request.searchTerm)
+        let token = LyricsToken(
+            trackID: trackID,
+            title: trackInfo.title,
+            artist: trackInfo.artist,
+            duration: request.duration
+        )
+        return Just(token).eraseToAnyPublisher()
     }
 
     public func lyricsFetchPublisher(token: LyricsToken) -> AnyPublisher<Lyrics, Never> {
@@ -54,12 +66,34 @@ extension LyricsProviders.SpotifyPrivate: _LyricsProvider {
         ]
         var request = URLRequest(url: components.url!)
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        if let clientToken = Self.clientTokenProvider?(), !clientToken.isEmpty {
+            request.setValue(clientToken, forHTTPHeaderField: "client-token")
+            request.setValue(clientToken, forHTTPHeaderField: "Client-Token")
+        }
         request.setValue("https://open.spotify.com", forHTTPHeaderField: "Origin")
         request.setValue("https://open.spotify.com/", forHTTPHeaderField: "Referer")
+        request.setValue("WebPlayer", forHTTPHeaderField: "app-platform")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("zh-CN", forHTTPHeaderField: "Accept-Language")
+        request.setValue("1.2.91.110.g17202b22", forHTTPHeaderField: "spotify-app-version")
+        request.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36", forHTTPHeaderField: "User-Agent")
 
         return sharedURLSession.cx.dataTaskPublisher(for: request)
-            .map(\.data)
-            .decode(type: SpotifyPrivateLyricsResponse.self, decoder: JSONDecoder().cx)
+            .compactMap { data, response -> SpotifyPrivateLyricsResponse? in
+                let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+                guard (200..<300).contains(statusCode) else {
+                    let body = String(data: data.prefix(360), encoding: .utf8) ?? ""
+                    Self.statusHandler?("Spotify private lyrics HTTP \(statusCode)：\(body)")
+                    return nil
+                }
+                do {
+                    return try JSONDecoder().cx.decode(SpotifyPrivateLyricsResponse.self, from: data)
+                } catch {
+                    let body = String(data: data.prefix(360), encoding: .utf8) ?? ""
+                    Self.statusHandler?("Spotify private lyrics 解码失败：\(error.localizedDescription)。响应：\(body)")
+                    return nil
+                }
+            }
             .compactMap { response in
                 let lines = response.lyrics.lines.compactMap { line -> LyricsLine? in
                     guard let time = TimeInterval(line.startTimeMs) else {
@@ -72,6 +106,9 @@ extension LyricsProviders.SpotifyPrivate: _LyricsProvider {
                     return nil
                 }
                 let lyrics = Lyrics(lines: lines, idTags: [:])
+                lyrics.idTags[.title] = token.title
+                lyrics.idTags[.artist] = token.artist
+                lyrics.length = token.duration
                 lyrics.metadata.serviceToken = token.trackID
                 Self.statusHandler?("Spotify private lyrics 获取成功：\(lines.count) 行")
                 return lyrics
@@ -95,6 +132,15 @@ extension LyricsProviders.SpotifyPrivate: _LyricsProvider {
             return suffix.split(separator: "?").first.map(String.init)
         }
         return nil
+    }
+
+    private func titleAndArtist(from searchTerm: LyricsSearchRequest.SearchTerm) -> (title: String?, artist: String?) {
+        switch searchTerm {
+        case let .info(title, artist):
+            return (title, artist)
+        case let .keyword(keyword):
+            return (keyword, nil)
+        }
     }
 }
 

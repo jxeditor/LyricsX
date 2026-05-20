@@ -865,7 +865,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "version=$(/usr/libexec/PlistBuddy -c \"Print CFBundleShortVersionString\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\nif [ \"$version\" != \"1.6.4.beta\" ]; then\n  /usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString 1.6.4.beta\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"\nfi\nbuildNumber=$(/usr/libexec/PlistBuddy -c \"Print CFBundleVersion\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\ncase \"$buildNumber\" in\n  ''|*[!0-9]*) buildNumber=164 ;;\nesac\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"";
+			shellScript = "version=$(/usr/libexec/PlistBuddy -c \"Print CFBundleShortVersionString\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\nif [ \"$version\" != \"1.6.4\" ]; then\n  /usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString 1.6.4\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"\nfi\nbuildNumber=$(/usr/libexec/PlistBuddy -c \"Print CFBundleVersion\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\ncase \"$buildNumber\" in\n  ''|*[!0-9]*) buildNumber=164 ;;\nesac\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"";
 		};
 		BB9163341F36371700E4E01C /* Upload dSYM */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -894,7 +894,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "version=$(/usr/libexec/PlistBuddy -c \"Print CFBundleShortVersionString\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\nif [ \"$version\" != \"1.6.4.beta\" ]; then\n  /usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString 1.6.4.beta\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"\nfi\nbuildNumber=$(/usr/libexec/PlistBuddy -c \"Print CFBundleVersion\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\ncase \"$buildNumber\" in\n  ''|*[!0-9]*) buildNumber=164 ;;\nesac\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"";
+			shellScript = "version=$(/usr/libexec/PlistBuddy -c \"Print CFBundleShortVersionString\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\nif [ \"$version\" != \"1.6.4\" ]; then\n  /usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString 1.6.4\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"\nfi\nbuildNumber=$(/usr/libexec/PlistBuddy -c \"Print CFBundleVersion\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\ncase \"$buildNumber\" in\n  ''|*[!0-9]*) buildNumber=164 ;;\nesac\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"";
 		};
 /* End PBXShellScriptBuildPhase section */
 

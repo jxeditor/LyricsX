@@ -31,6 +31,7 @@ extension MusicPlayers {
         private let debugLogURL = URL(fileURLWithPath: "/tmp/lyricsx-system-media.log")
         private var lastLoggedClientSnapshot: String?
         private var lastAcceptedInfoDate: Date?
+        private var lastClientDiagnosticDate: Date?
         
         public init?(name: MusicPlayerName? = nil) {
             guard Self.available else { return nil }
@@ -233,7 +234,7 @@ extension MusicPlayers.SystemMedia: MusicPlayerProtocol {
     }
 
     private func updateNeteasePlayerState() {
-        logNowPlayingClientsForDiagnostics()
+        logNowPlayingClientsForDiagnosticsIfNeeded()
         guard let getNowPlayingApplicationPID = MRMediaRemoteGetNowPlayingApplicationPID_ else {
             MRMediaRemoteGetNowPlayingInfo_?(DispatchQueue.playerUpdate) { [weak self] info in
                 self?.getNowPlayingInfoCallback(info)
@@ -302,6 +303,16 @@ extension MusicPlayers.SystemMedia: MusicPlayerProtocol {
                 self.writeDebugLog("netease clients count=\(array.count) \(snapshot)")
             }
         }
+    }
+
+    private func logNowPlayingClientsForDiagnosticsIfNeeded() {
+        let now = Date()
+        if let lastClientDiagnosticDate = lastClientDiagnosticDate,
+           now.timeIntervalSince(lastClientDiagnosticDate) < 10 {
+            return
+        }
+        lastClientDiagnosticDate = now
+        logNowPlayingClientsForDiagnostics()
     }
 
     private func describeNowPlayingClient(_ client: CFTypeRef?) -> String {
@@ -401,6 +412,26 @@ private struct MediaControlNowPlayingSnapshot: Decodable {
     var contentItemIdentifier: String?
 
     static func fetch() -> MediaControlNowPlayingSnapshot? {
+        let now = Date()
+        cacheLock.lock()
+        if let cachedSnapshot = cachedSnapshot,
+           let cachedDate = cachedDate,
+           now.timeIntervalSince(cachedDate) < cacheTimeToLive {
+            cacheLock.unlock()
+            return cachedSnapshot
+        }
+        if isFetching {
+            cacheLock.unlock()
+            return nil
+        }
+        isFetching = true
+        cacheLock.unlock()
+        defer {
+            cacheLock.lock()
+            isFetching = false
+            cacheLock.unlock()
+        }
+
         let executablePaths = bundledExecutablePaths + [
             "/opt/homebrew/bin/media-control",
             "/usr/local/bin/media-control"
@@ -436,7 +467,12 @@ private struct MediaControlNowPlayingSnapshot: Decodable {
         }
 
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        return try? JSONDecoder().decode(MediaControlNowPlayingSnapshot.self, from: data)
+        let snapshot = try? JSONDecoder().decode(MediaControlNowPlayingSnapshot.self, from: data)
+        cacheLock.lock()
+        cachedSnapshot = snapshot
+        cachedDate = Date()
+        cacheLock.unlock()
+        return snapshot
     }
 
     private static var bundledExecutablePaths: [String] {
@@ -448,6 +484,12 @@ private struct MediaControlNowPlayingSnapshot: Decodable {
             $0.resourceURL?.appendingPathComponent("media-control/bin/media-control").path
         }
     }
+
+    private static let cacheTimeToLive: TimeInterval = 1
+    private static let cacheLock = NSLock()
+    private static var cachedSnapshot: MediaControlNowPlayingSnapshot?
+    private static var cachedDate: Date?
+    private static var isFetching = false
 }
 
 private final class BundleProbe {}

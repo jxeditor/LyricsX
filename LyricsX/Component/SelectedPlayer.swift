@@ -22,7 +22,7 @@ extension MusicPlayers {
         
         private var manualUpdateObservation: AnyCancellable?
         
-        var manualUpdateInterval: TimeInterval = 1.0 {
+        var manualUpdateInterval: TimeInterval = 2.0 {
             didSet {
                 scheduleManualUpdate()
             }
@@ -117,6 +117,16 @@ private struct MediaControlAutoSnapshot: Decodable {
     var bundleIdentifier: String?
 
     static func fetch() -> MediaControlAutoSnapshot? {
+        let now = Date()
+        cacheLock.lock()
+        if let cachedSnapshot = cachedSnapshot,
+           let cachedDate = cachedDate,
+           now.timeIntervalSince(cachedDate) < cacheTimeToLive {
+            cacheLock.unlock()
+            return cachedSnapshot
+        }
+        cacheLock.unlock()
+
         let executablePaths = bundledExecutablePaths + [
             "/opt/homebrew/bin/media-control",
             "/usr/local/bin/media-control"
@@ -152,7 +162,12 @@ private struct MediaControlAutoSnapshot: Decodable {
         }
 
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        return try? JSONDecoder().decode(MediaControlAutoSnapshot.self, from: data)
+        let snapshot = try? JSONDecoder().decode(MediaControlAutoSnapshot.self, from: data)
+        cacheLock.lock()
+        cachedSnapshot = snapshot
+        cachedDate = Date()
+        cacheLock.unlock()
+        return snapshot
     }
 
     private static var bundledExecutablePaths: [String] {
@@ -164,6 +179,11 @@ private struct MediaControlAutoSnapshot: Decodable {
             $0.resourceURL?.appendingPathComponent("media-control/bin/media-control").path
         }
     }
+
+    private static let cacheTimeToLive: TimeInterval = 3
+    private static let cacheLock = NSLock()
+    private static var cachedSnapshot: MediaControlAutoSnapshot?
+    private static var cachedDate: Date?
 }
 
 private final class BundleProbe {}

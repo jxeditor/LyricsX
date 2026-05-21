@@ -67,6 +67,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSMenu
         karaokeLyricsWC?.showWindow(nil)
         
         statusBarMenu.delegate = self
+        MenuBarLyricsController.shared.attachMenu(statusBarMenu)
         installMainMenuFallback()
         NSAppleEventManager.shared().setEventHandler(self,
                                                      andSelector: #selector(handleGetURLEvent(_:withReplyEvent:)),
@@ -115,7 +116,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSMenu
         }
         let url = Bundle.main.bundleURL
             .appendingPathComponent("Contents/Library/LoginItems/Login Helper.app")
-        try? NSWorkspace.shared.launchApplication(at: url, configuration: [:])
+        do {
+            try NSWorkspace.shared.launchApplication(at: url, configuration: [:])
+        } catch {
+            log("launch menu bar helper failed: \(error.localizedDescription)")
+        }
     }
     
     func applicationWillTerminate(_ aNotification: Notification) {

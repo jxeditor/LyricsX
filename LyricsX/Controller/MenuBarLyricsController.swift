@@ -61,6 +61,11 @@ class MenuBarLyricsController {
         item.isVisible = true
         return item
     }
+
+    func attachMenu(_ menu: NSMenu) {
+        statusItem.menu = menu
+        setImageStatusItem()
+    }
     
     private func handleLyricsDisplay(event: (lyrics: Lyrics?, index: Int?)) {
         guard !defaults[.disableLyricsWhenPaused] || selectedPlayer.playbackState.isPlaying,

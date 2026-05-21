@@ -96,8 +96,7 @@ extension MusicPlayers {
         }
 
         private static func currentSystemPlayingPlayerName() -> MusicPlayerName? {
-            guard let snapshot = MediaControlAutoSnapshot.fetch(),
-                  snapshot.playing else {
+            guard let snapshot = MediaControlAutoSnapshot.fetch() else {
                 return nil
             }
             switch snapshot.bundleIdentifier {
@@ -115,7 +114,6 @@ extension MusicPlayers {
 }
 
 private struct MediaControlAutoSnapshot: Decodable {
-    var playing: Bool
     var bundleIdentifier: String?
 
     static func fetch() -> MediaControlAutoSnapshot? {

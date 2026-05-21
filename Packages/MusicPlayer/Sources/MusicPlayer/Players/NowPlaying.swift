@@ -26,6 +26,7 @@ extension MusicPlayers {
         }
 
         public var preferredPlayerNameProvider: (() -> MusicPlayerName?)?
+        private var lastPreferredPlayerName: MusicPlayerName?
         
         private var selectNewPlayerCanceller: AnyCancellable?
         
@@ -55,17 +56,26 @@ extension MusicPlayers {
         
         private func selectNewPlayer() {
             var newPlayer: MusicPlayerProtocol?
-            if let preferredName = preferredPlayerNameProvider?(),
-               let preferred = players.first(where: { $0.name == preferredName && $0.isSelectableForAuto }) {
+            if let preferredName = preferredPlayerNameProvider?() {
+                lastPreferredPlayerName = preferredName
+                if let preferred = players.first(where: { $0.name == preferredName && $0.isSelectableForAuto }) {
+                    newPlayer = preferred
+                }
+            }
+            if newPlayer == nil,
+               let lastPreferredPlayerName = lastPreferredPlayerName,
+               let preferred = players.first(where: { $0.name == lastPreferredPlayerName && $0.isSelectableForAuto }) {
                 newPlayer = preferred
-            } else if let spotify = players.first(where: { $0.playbackState.isPlaying && $0.hasSpotifyTrackID }),
+            }
+            if newPlayer == nil,
+               let spotify = players.first(where: { $0.playbackState.isPlaying && $0.hasSpotifyTrackID }),
                designatedPlayer?.hasSpotifyTrackID != true {
                 newPlayer = spotify
-            } else if designatedPlayer?.playbackState.isPlaying == true {
+            } else if newPlayer == nil, designatedPlayer?.playbackState.isPlaying == true {
                 newPlayer = designatedPlayer
-            } else if let playing = players.first(where: { $0.playbackState.isPlaying }) {
+            } else if newPlayer == nil, let playing = players.first(where: { $0.playbackState.isPlaying }) {
                 newPlayer = playing
-            } else if let running = players.first(where: { $0.playbackState != .stopped }) {
+            } else if newPlayer == nil, let running = players.first(where: { $0.playbackState != .stopped }) {
                 newPlayer = running
             }
             if newPlayer !== designatedPlayer {

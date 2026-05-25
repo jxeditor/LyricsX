@@ -9,8 +9,11 @@
 
 import Cocoa
 import LyricsCore
+import LyricsService
 import MusicPlayer
 import Regex
+
+private let lyricsSourcePreferenceQualityTolerance = 0.05
 
 extension MusicPlayerName {
     
@@ -34,6 +37,17 @@ extension MusicPlayerName {
         case .vox:      return #imageLiteral(resourceName: "vox_icon")
         case .audirvana: return #imageLiteral(resourceName: "audirvana_icon")
         case .swinsian: return #imageLiteral(resourceName: "swinsian_icon")
+        }
+    }
+    
+    var preferredLyricsServices: [LyricsProviders.Service] {
+        switch self {
+        case .neteaseCloudMusic:
+            return [.netease]
+        case .spotify:
+            return [.spotifyPrivate]
+        default:
+            return []
         }
     }
 }
@@ -123,6 +137,40 @@ extension UserDefaults {
 }
 
 extension Lyrics {
+    
+    func isAllowedAutomaticSource(for playerName: MusicPlayerName?) -> Bool {
+        guard let playerName = playerName,
+            !playerName.preferredLyricsServices.isEmpty else {
+            return true
+        }
+        return metadata.service.map(playerName.preferredLyricsServices.contains) == true
+    }
+    
+    func isBetterAutoMatch(than current: Lyrics?, for playerName: MusicPlayerName?) -> Bool {
+        guard let current = current else {
+            return true
+        }
+        if abs(quality - current.quality) > lyricsSourcePreferenceQualityTolerance {
+            return quality > current.quality
+        }
+        return sourcePreferenceRank(for: playerName) < current.sourcePreferenceRank(for: playerName)
+    }
+    
+    func shouldSortBefore(_ other: Lyrics, for playerName: MusicPlayerName?) -> Bool {
+        if abs(quality - other.quality) > lyricsSourcePreferenceQualityTolerance {
+            return quality > other.quality
+        }
+        return sourcePreferenceRank(for: playerName) < other.sourcePreferenceRank(for: playerName)
+    }
+    
+    private func sourcePreferenceRank(for playerName: MusicPlayerName?) -> Int {
+        guard let service = metadata.service,
+            let playerName = playerName,
+            let rank = playerName.preferredLyricsServices.firstIndex(of: service) else {
+            return Int.max
+        }
+        return rank
+    }
     
     func associateWithTrack(_ track: MusicTrack) {
         metadata.title = track.title

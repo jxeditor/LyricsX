@@ -248,7 +248,10 @@ class AppController: NSObject {
         if defaults[.strictSearchEnabled] && !lyrics.isMatched() {
             return
         }
-        if let current = currentLyrics, current.quality >= lyrics.quality {
+        if !lyrics.isAllowedAutomaticSource(for: selectedPlayer.name) {
+            return
+        }
+        if !lyrics.isBetterAutoMatch(than: currentLyrics, for: selectedPlayer.name) {
             return
         }
         lyrics.associateWithTrack(track)

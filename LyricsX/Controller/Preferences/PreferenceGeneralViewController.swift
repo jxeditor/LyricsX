@@ -172,7 +172,7 @@ class PreferenceGeneralViewController: NSViewController {
             let column = NSStackView()
             column.orientation = .vertical
             column.alignment = .centerX
-            column.spacing = 6
+            column.spacing = 3
             column.translatesAutoresizingMaskIntoConstraints = false
 
             let icon = NSButton()
@@ -184,8 +184,8 @@ class PreferenceGeneralViewController: NSViewController {
             icon.target = self
             icon.action = #selector(preferredPlayerIconAction(_:))
             icon.tag = item.tag
-            icon.widthAnchor.constraint(equalToConstant: 40).isActive = true
-            icon.heightAnchor.constraint(equalToConstant: 40).isActive = true
+            icon.widthAnchor.constraint(equalToConstant: 20).isActive = true
+            icon.heightAnchor.constraint(equalToConstant: 20).isActive = true
 
             let radio = NSButton(radioButtonWithTitle: item.title, target: self, action: #selector(preferredPlayerAction(_:)))
             radio.tag = item.tag
